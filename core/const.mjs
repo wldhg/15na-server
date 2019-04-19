@@ -19,20 +19,38 @@ export const APP_FUNC = {
   operate: {
     keyword: 'run',
     description: 'Open Syaa Server!',
-    options: ['port', 'host']
+    options: ['wsPort', 'webPort', 'certPath', 'keyPath', 'noRedirector']
   }
 }
 export const APP_OPT = {
-  port: {
-    flags: ['-p', '--port'],
+  wsPort: {
+    flags: ['-wsp', '--websocket-port'],
     type: 'ARGOPT_WITH_DATA',
-    description: 'Open websocket server with given port (default: 9119)',
+    description: 'Open websocket server with given port (default: 11900)',
     required: false
   },
-  host: {
-    flags: ['-h', '--host'],
+  webPort: {
+    flags: ['-wp', '--web-port'],
     type: 'ARGOPT_WITH_DATA',
-    description: 'Open websocket server with given host (default: localhost)',
+    description: 'Open web server with given port (default: 443)',
+    required: false
+  },
+  certPath: {
+    flags: ['-c', '--cert'],
+    type: 'ARGOPT_WITH_DATA',
+    description: 'Specify SSL certificate',
+    required: true
+  },
+  keyPath: {
+    flags: ['-k', '--key'],
+    type: 'ARGOPT_WITH_DATA',
+    description: 'Specify a key for SSL certificate',
+    required: true
+  },
+  noRedirector: {
+    flags: ['-nr', '--no-redirector'],
+    type: 'ARGOPT_WITHOUT_DATA',
+    description: 'Do not make 443 port redirector on 80 port (This works only when the port is 443)',
     required: false
   }
 }
