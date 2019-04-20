@@ -9,9 +9,10 @@ export const APPNAME_ABBR = 'syaa'
 
 // [Path]
 // NOTE: To point a file/dir in this program, USE RELATIVE PATH
-export const DATA_DIR = path.join('.', 'logs')
+export const DATA_DIR = path.join('.')
 export const LOG_DEFAULT_FILE = 'process.log'
-export const LOG_DIR = DATA_DIR
+export const LOG_DIR = path.join(DATA_DIR, 'logs')
+export const DB_DIR = path.join(DATA_DIR, 'db')
 
 // [Argument Parsing]
 export const APP_DEFFUNC = 'run'

@@ -9,6 +9,7 @@ import SocketIO from 'socket.io'
 
 import * as ws from './socket' // Websocket
 import * as kr from './route' // Koa Route
+import * as db from './db' // Trivial DB
 
 export const startRedirectHTTPServer = (log) => {
   const redirectApp = new Koa()
@@ -43,6 +44,7 @@ export const startServer = (log, e, arg, pkg) => {
     kr.route(app)
     // Listen from 443
     h2Server.listen(arg.webPort || 443)
+    db.getRoomID()
   }
 }
 
