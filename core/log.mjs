@@ -38,8 +38,8 @@ export default class {
     const openFStream = (renamedPath, i) => {
       let stream = fs.createWriteStream(logPath)
       this._fstream = stream
-      this.fsi = typeof i === 'number' ? i : 0
       if (typeof i === 'number') this.info(`Previous log file has moved to ${renamedPath}.`)
+      this.fsi = typeof i === 'number' ? i : 0
     }
 
     return fs.access(this.logDir, fs.constants.F_OK, e => {
