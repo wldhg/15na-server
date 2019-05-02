@@ -19,6 +19,7 @@ export const route = (io) => {
   return prepareRoute().then(() => {
     io.of('/syaa-ws/in').on('connection', cli => {
       cli.emit('reqID')
+      lin.debug('haiii of in')
     })
     io.of('/syaa-ws/out').on('connection', cli => {
       lout.debug('haiiii')
