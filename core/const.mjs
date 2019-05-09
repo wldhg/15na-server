@@ -4,8 +4,8 @@
 import path from 'path'
 
 // [String]
-export const APPNAME = 'Syaa Server'
-export const APPNAME_ABBR = 'syaa'
+export const APPNAME = '15na Server'
+export const APPNAME_ABBR = '15na'
 
 // [Path]
 // NOTE: To point a file/dir in this program, USE RELATIVE PATH
@@ -19,7 +19,7 @@ export const APP_DEFFUNC = 'run'
 export const APP_FUNC = {
   operate: {
     keyword: 'run',
-    description: 'Open Syaa Server!',
+    description: 'Open 15na Server!',
     options: ['wsPort', 'webPort', 'certPath', 'keyPath', 'noRedirector']
   }
 }

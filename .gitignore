@@ -83,5 +83,5 @@ typings/
 # DynamoDB Local files
 .dynamodb/
 
-# Syaa DB
+# 15na DB
 db/

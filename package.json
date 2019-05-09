@@ -1,9 +1,9 @@
 {
-  "name": "syaa-server",
+  "name": "15na-server",
   "version": "1.0.0",
-  "description": "Central server program for Syaa",
-  "main": "syaa.js",
-  "repository": "https://github.com/widh/syaa-server.git",
+  "description": "Central server program for 15na",
+  "main": "15na.js",
+  "repository": "https://github.com/widh/15na-server.git",
   "author": "Wldh <jio@widh.me>",
   "license": "MPL-2.0",
   "private": false,
@@ -19,7 +19,7 @@
   },
   "scripts": {
     "fix-style": "yarn standard ./**/*.mjs --fix",
-    "start": "node --experimental-modules syaa.mjs"
+    "start": "node --experimental-modules 15na.mjs"
   },
   "dependencies": {
     "colors": "^1.3.3",
