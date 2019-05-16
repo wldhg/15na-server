@@ -85,3 +85,7 @@ typings/
 
 # 15na DB
 db/
+
+# 15na model
+model/
+amphase-quarter-1.00/

@@ -2,6 +2,7 @@
 // Exit control module
 
 import YLog from './log'
+import ipc from 'node-ipc'
 
 var log = new YLog()
 var exitStarted = false
@@ -23,6 +24,7 @@ process.on('SIGUSR1', e => {
   exit(0)
 })
 process.on('SIGINT', e => {
+  ipc.server.stop()
   log.warn('Shutdowning, see-ya.', 'SIGINT')
   exit(0)
 })

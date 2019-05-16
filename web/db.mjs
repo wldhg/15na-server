@@ -11,6 +11,6 @@ export const getRoomID = () => {
     name: 'haihai',
     body: 'title'
   }).then(id => {
-    console.debug(id)
+    // console.debug(id)
   })
 }

@@ -5,6 +5,8 @@ import * as cs from '../core/const'
 
 var lin
 var lout
+var clis = []
+var wcnt = 0
 
 export const prepareRoute = () => {
   lin = new YLog(cs.APPNAME_ABBR)
@@ -15,14 +17,18 @@ export const prepareRoute = () => {
   return new Promise((resolve) => setTimeout(resolve, 300))
 }
 
-export const route = (io) => {
+export const route = (io, csi) => {
   return prepareRoute().then(() => {
     io.of('/15na-ws/in').on('connection', cli => {
-      cli.emit('reqID')
-      lin.debug('haiii of in')
+      lin.debug('New AP connected.')
+      cli.on('neww', csi.processWindow)
     })
     io.of('/15na-ws/out').on('connection', cli => {
-      lout.debug('haiiii')
+      lout.debug('New Client connected.')
+      cli.emit('allocateProfile', JSON.stringify({
+        statLocation: 'C5 108',
+        ip: '141.223.108.152'
+      }))
     })
   })
 }

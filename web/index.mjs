@@ -22,7 +22,7 @@ export const startRedirectHTTPServer = (log) => {
   })
 }
 
-export const startServer = (log, e, arg, pkg) => {
+export const startServer = (log, e, arg, pkg, csi) => {
   // Check whether if the port configuration is okay
   const port = Number(arg.port || 443)
   if (isNaN(port) || port < 1 || port > 65535) {
@@ -40,7 +40,7 @@ export const startServer = (log, e, arg, pkg) => {
     }, app.callback())
     const io = new SocketIO(h2Server)
     // Make routers
-    ws.route(io)
+    ws.route(io, csi)
     kr.route(app)
     // Listen from 443
     h2Server.listen(arg.webPort || 443)
