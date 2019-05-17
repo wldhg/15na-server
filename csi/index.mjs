@@ -6,7 +6,6 @@ import os from 'os'
 import fs from 'fs'
 import moment from 'moment'
 import rd from '../util/random'
-import * as py from './py'
 
 var log
 var e
@@ -16,6 +15,7 @@ var clCount = 4
 var clRotation = 0
 var windowCount = 0
 var launchCode = 0
+var clis = []
 
 export const prepare = (_log, _e, _arg) => {
   // Save global variables
@@ -47,7 +47,8 @@ export const prepare = (_log, _e, _arg) => {
         Math.floor(Math.floor(Number(arg.packetsPerSecond) / Number(arg.optimizeFactor || 1)) * Number(arg.windowLength)),
         arg.columnRange.substring(0, arg.columnRange.indexOf(':')),
         arg.columnRange.substring(arg.columnRange.indexOf(':') + 1),
-        Number(arg.slideInterval) * Number(arg.packetsPerSecond)
+        Number(arg.slideInterval) * Number(arg.packetsPerSecond),
+        arg.kerasCore || os.cpus().length
       ], arg.debugClassifier ? { stdio: ['ignore', 1, 2] } : {})
       cp.on('close', () => {
         log.error('A socket seems to be died!')
@@ -64,7 +65,13 @@ export const prepare = (_log, _e, _arg) => {
   ipc.server.on('data', data => {
     data = JSON.parse(data.toString().slice(0, -1)) // Remove Form Feed
     for (var i = 0; i < data.length; i++) {
-      log.info(`Is fall? ${data[i][0]}`)
+      console.log(Number(data[i][Number(arg.notifID) - 1]))
+      if (Number(data[i][Number(arg.notifID) - 1]) > Number(arg.notifCond)) {
+        log.info('FALL DETECTED!')
+        clis.forEach((item) => {
+          item.emit('fallalert')
+        })
+      }
     }
   })
   ipc.server.start()
@@ -93,4 +100,11 @@ export const processWindow = (buf) => {
       }
     })
   }
+}
+
+export const notifRegister = (cli) => {
+  clis.push(cli)
+  cli.on('disconnect', () => {
+    clis.splice(clis.indexOf(cli), 1)
+  })
 }

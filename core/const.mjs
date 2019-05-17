@@ -20,7 +20,7 @@ export const APP_FUNC = {
   operate: {
     keyword: 'run',
     description: 'Open 15na Server!',
-    options: ['port', 'certPath', 'keyPath', 'noRedirector', 'packetsPerSecond', 'optimizeFactor', 'slideInterval', 'modelDir', 'columnRange', 'notifCond', 'notifID', 'classifierCount', 'debugClassifier', 'windowLength']
+    options: ['port', 'certPath', 'keyPath', 'noRedirector', 'packetsPerSecond', 'optimizeFactor', 'slideInterval', 'modelDir', 'columnRange', 'notifCond', 'notifID', 'classifierCount', 'debugClassifier', 'windowLength', 'kerasCore']
   }
 }
 export const APP_OPT = {
@@ -87,7 +87,7 @@ export const APP_OPT = {
   notifID: {
     flags: ['-id', '--notif-id'],
     type: 'ARGOPT_WITH_DATA',
-    description: 'If probability of [NOTIF ID] goes over [NOTIF COND], notification will be sent',
+    description: 'If probability of [NOTIF ID] goes over [NOTIF COND], notification will be sent (> 0)',
     required: true
   },
   classifierCount: {
@@ -107,5 +107,11 @@ export const APP_OPT = {
     type: 'ARGOPT_WITH_DATA',
     description: 'Window length in seconds',
     required: true
+  },
+  kerasCore: {
+    flags: ['--keras-core'],
+    type: 'ARGOPT_WITH_DATA',
+    description: 'This modifies inter_op_parallelism_threads.',
+    required: false
   }
 }

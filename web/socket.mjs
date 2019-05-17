@@ -29,6 +29,7 @@ export const route = (io, csi) => {
         statLocation: 'C5 108',
         ip: '141.223.108.152'
       }))
+      csi.notifRegister(cli)
     })
   })
 }

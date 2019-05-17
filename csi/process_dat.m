@@ -1,5 +1,5 @@
-function ret = process_dat(path)
-    raw_data = read_bf_file(path);
+function ret = process_dat(path, optim)
+    raw_data = read_bf_file(path, optim);
 
     % eliminate empty cell
     empty_cells = find(cellfun('isempty', raw_data));

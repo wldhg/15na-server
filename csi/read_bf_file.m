@@ -4,9 +4,9 @@
 %
 % (c) 2008-2011 Daniel Halperin <dhalperi@cs.washington.edu>
 %
-function ret = read_bf_file(filename)
+function ret = read_bf_file(filename, optim)
 %% Input check
-error(nargchk(1,1,nargin));
+error(nargchk(2,2,nargin));
 
 %% Open file
 f = fopen(filename, 'rb');
@@ -38,6 +38,7 @@ cur = 0;                        % Current offset into file
 count = 0;                      % Number of records output
 broken_perm = 0;                % Flag marking whether we've encountered a broken CSI yet
 triangle = [1 3 6];             % What perm should sum to for 1,2,3 antennas
+real_count = 0;
 
 %% Process all entries in file
 % Need 3 bytes -- 2 byte size field and 1 byte code
@@ -62,6 +63,10 @@ while cur < (len - 3)
     end
 
     if (code == 187) %hex2dec('bb')) Beamforming matrix -- output a record
+        real_count = real_count + 1;
+        if mod(real_count, optim) ~= 0
+            continue;
+        end
         count = count + 1;
         ret{count} = read_bfee(bytes);
 

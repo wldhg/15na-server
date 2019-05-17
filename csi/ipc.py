@@ -1,8 +1,16 @@
 # Widh Jio
 
 import sys
+import os
 import keras.models as km
-print(sys.argv)
+import keras.backend as K
+
+# Set Keras Core
+KERAS_CORE = int(sys.argv[8])
+os.environ['OMP_NUM_THREADS'] = sys.argv[8]
+os.environ['KMP_AFFINITY'] = "noverbose,warnings,norespect,granularity=group,scatter,0,0"
+K.set_session(K.tf.Session(config=K.tf.ConfigProto(intra_op_parallelism_threads=KERAS_CORE, inter_op_parallelism_threads=KERAS_CORE)))
+
 # Set File Names
 modelName = sys.argv[2] + "/model.h5"
 modelProp = sys.argv[2] + "/model.yml"
@@ -37,16 +45,12 @@ with soc.socket(soc.AF_UNIX, soc.SOCK_STREAM) as s:
         datPath = s.recv(1024).decode('utf-8')
 
         # Read Datfile
-        ocat = np.asarray(eng.process_dat(datPath))
-        cat = ocat[::int(sys.argv[3]), :]
+        print("MATLAB Phase...")
+        cat = np.asarray(eng.process_dat(datPath, int(sys.argv[3])))
+        print("Python Phase...")
 
         # Get Windows
-        xx = np.zeros((
-            int((ocat.shape[0] - WINDOW_SIZE) // SLIDE_SIZE + 1),
-            int(WINDOW_SIZE),
-            COL_END - COL_START
-        ), float)
-        ai = 0
+        xx = np.empty([0, int(WINDOW_SIZE), COL_END - COL_START], float)
         while True:
             if len(cat) < WINDOW_SIZE:
                 break
@@ -54,10 +58,11 @@ with soc.socket(soc.AF_UNIX, soc.SOCK_STREAM) as s:
                 window = np.dstack(
                     cat[0:int(WINDOW_SIZE),COL_START:COL_END].T
                 )
-                xx[ai] = window
-                ai += 1
+                xx = np.concatenate((xx, window), axis=0)
                 cat = cat[SLIDE_SIZE:, :]
 
         # Get Scores
+        print("Keras Phase...")
         scores = model.predict(xx)
+        print("End...")
         s.send((json.dumps(scores.tolist()) + '\f').encode())
