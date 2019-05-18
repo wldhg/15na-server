@@ -1,4 +1,4 @@
-#!/usr/bin/env -S node --experimental-modules
+#!/usr/bin/env node --experimental-modules
 /* eslint-disable no-unused-vars */
 import { init, log, e, pkg, arg } from './core/init'
 import * as web from './web'
