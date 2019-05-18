@@ -12,7 +12,5 @@ init.then(() => {
       // Start websocket server with preparing CSI
       csi.prepare(log, e, arg)
       web.startServer(log, e, arg, pkg, csi)
-      // Set when of exit
-      process.on('exit', web.stopServer)
   }
 }).catch(e.parse(0x200, 'Unknown error occurred while executing some code segments.'))

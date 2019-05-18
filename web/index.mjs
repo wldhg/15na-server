@@ -7,8 +7,8 @@ import fs from 'fs'
 import Koa from 'koa'
 import SocketIO from 'socket.io'
 
-import * as ws from './socket' // Websocket
-import * as kr from './route' // Koa Route
+import * as ws from './routeWss' // Websocket
+import * as kr from './routeHttps' // Koa Route
 import * as db from './db' // Trivial DB
 
 export const startRedirectHTTPServer = (log) => {
@@ -42,12 +42,10 @@ export const startServer = (log, e, arg, pkg, csi) => {
     // Make routers
     ws.route(io, csi)
     kr.route(app)
-    // Listen from 443
-    h2Server.listen(arg.webPort || 443)
+    // Listen from port (default: 443)
+    h2Server.listen(port)
+    log.info("Now started web io.")
+    // NOTE: For future encryption feature
     db.getRoomID()
   }
-}
-
-export const stopServer = () => {
-
 }

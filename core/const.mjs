@@ -20,7 +20,7 @@ export const APP_FUNC = {
   operate: {
     keyword: 'run',
     description: 'Open 15na Server!',
-    options: ['port', 'certPath', 'keyPath', 'noRedirector', 'packetsPerSecond', 'optimizeFactor', 'slideInterval', 'modelDir', 'columnRange', 'notifCond', 'notifID', 'classifierCount', 'debugClassifier', 'windowLength', 'kerasCore']
+    options: ['port', 'certPath', 'keyPath', 'noRedirector', 'packetsPerSecond', 'optimizeFactor', 'slideInterval', 'modelDir', 'columnRange', 'notifCond', 'notifID', 'preprocessingServerCount', 'debugClassifier', 'windowLength']
   }
 }
 export const APP_OPT = {
@@ -90,10 +90,10 @@ export const APP_OPT = {
     description: 'If probability of [NOTIF ID] goes over [NOTIF COND], notification will be sent (> 0)',
     required: true
   },
-  classifierCount: {
-    flags: ['-cl', '--classifier-count'],
+  preprocessingServerCount: {
+    flags: ['-ppc', '--preprocessor-count'],
     type: 'ARGOPT_WITH_DATA',
-    description: 'The number of instances of python CSI classifier for real-time performance (Default: 4)',
+    description: 'The number of instances of python CSI preprocessor for real-time performance (Default: 4)',
     required: false
   },
   debugClassifier: {
@@ -107,11 +107,5 @@ export const APP_OPT = {
     type: 'ARGOPT_WITH_DATA',
     description: 'Window length in seconds',
     required: true
-  },
-  kerasCore: {
-    flags: ['--keras-core'],
-    type: 'ARGOPT_WITH_DATA',
-    description: 'This modifies inter_op_parallelism_threads.',
-    required: false
   }
 }

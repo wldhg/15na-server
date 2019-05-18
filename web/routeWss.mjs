@@ -5,8 +5,6 @@ import * as cs from '../core/const'
 
 var lin
 var lout
-var clis = []
-var wcnt = 0
 
 export const prepareRoute = () => {
   lin = new YLog(cs.APPNAME_ABBR)
@@ -25,6 +23,7 @@ export const route = (io, csi) => {
     })
     io.of('/15na-ws/out').on('connection', cli => {
       lout.debug('New Client connected.')
+      // NOTE: Implement this feature with using DB
       cli.emit('allocateProfile', JSON.stringify({
         statLocation: 'C5 108',
         ip: '141.223.108.152'
