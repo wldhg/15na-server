@@ -103,6 +103,10 @@ export const help = (arg, pkg, log) => {
 
                   if (flagString.length > longestFlagLength) { longestFlagLength = flagString.length }
 
+                  if (cs.APP_OPT[a].required) {
+                    cs.APP_OPT[a].description = '(Required) ' + cs.APP_OPT[a].description
+                  }
+
                   flagList.push(flagString)
                   descList.push(cs.APP_OPT[a].description)
                 }
