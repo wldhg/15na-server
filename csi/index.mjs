@@ -35,7 +35,8 @@ const setupPred = (predPath, prepPath, innPath) => {
       predPath,
       `${process.cwd()}/${arg.modelDir}`,
       innPath,
-      psCount
+      psCount,
+      arg.pipeBufferSize || 30
     ], arg.debugClassifier ? { stdio: ['ignore', 1, 2] } : {})
     cp.on('close', () => {
       log.error('Keras server died! Please fix the error and restart irona server.')
@@ -112,9 +113,9 @@ export const prepare = (_log, _e, _arg) => {
   psCount = Number(arg.preprocessingServerCount) || 4
 
   // Launch IPC server
-  const prepPath = `${process.cwd()}/preprocessing.ipc`
-  const predPath = `${process.cwd()}/predict.ipc`
-  const innPath = `${process.cwd()}/pipe.ipc`
+  const prepPath = `${os.tmpdir()}/${launchCode}-preprocessing.ipc`
+  const predPath = `${os.tmpdir()}/${launchCode}-predict.ipc`
+  const innPath = `${os.tmpdir()}/${launchCode}-pipe.ipc`
   pred = new ipc.IPC
   prep = new ipc.IPC
   prep.config.rawBuffer = true

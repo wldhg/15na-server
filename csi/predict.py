@@ -9,6 +9,7 @@ import os
 import multiprocessing as mp
 import keras.models as km
 import keras.backend as K
+import numpy
 
 # Set Keras Core
 MAX_CORE = mp.cpu_count()
@@ -24,6 +25,7 @@ SOCKET_PATH = sys.argv[1]
 MODEL_DIR = sys.argv[2]
 PIPE_PATH = sys.argv[3]
 PREP_CNT = int(sys.argv[4])
+PIPE_BUFSIZE = 2**int(sys.argv[5])
 
 # Set File Names
 modelName = MODEL_DIR + "/model.h5"
@@ -37,22 +39,23 @@ else:
     model = km.model_from_yaml(modelPropRaw)
 model.load_weights(modelName)
 model.compile(loss='categorical_crossentropy', optimizer='adam')
+model._make_predict_function()
 
 # Open IPC
-
 with soc.socket(soc.AF_UNIX, soc.SOCK_STREAM) as node:
     node.connect(SOCKET_PATH)
 
     def procWindow(prep, addr):
         while True:
-            xx = pickle.loads(prep.recv(2097152), encoding='bytes')
+            xx = pickle.loads(prep.recv(PIPE_BUFSIZE))
             print(" -- [ PRED ] Received pickle...")
             scores = model.predict(xx)
             print(" -- [ PRED ] Predicted...")
             node.send((json.dumps(scores.tolist()) + '\f').encode())
+
     with soc.socket(soc.AF_UNIX, soc.SOCK_STREAM) as pipe:
         pipe.bind(PIPE_PATH)
         pipe.listen(PREP_CNT)
         while True:
             acceptedPipe = pipe.accept()
-            th.Thread(procWindow, acceptedPipe)
+            th.Thread(target=procWindow, args=acceptedPipe).start()

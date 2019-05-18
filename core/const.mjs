@@ -20,7 +20,7 @@ export const APP_FUNC = {
   operate: {
     keyword: 'run',
     description: 'Open 15na Server!',
-    options: ['port', 'certPath', 'keyPath', 'noRedirector', 'packetsPerSecond', 'optimizeFactor', 'slideInterval', 'modelDir', 'columnRange', 'notifCond', 'notifID', 'preprocessingServerCount', 'debugClassifier', 'windowLength']
+    options: ['port', 'certPath', 'keyPath', 'noRedirector', 'packetsPerSecond', 'optimizeFactor', 'slideInterval', 'modelDir', 'columnRange', 'notifCond', 'notifID', 'preprocessingServerCount', 'debugClassifier', 'windowLength', 'pipeBufferSize']
   }
 }
 export const APP_OPT = {
@@ -107,5 +107,11 @@ export const APP_OPT = {
     type: 'ARGOPT_WITH_DATA',
     description: 'Window length in seconds',
     required: true
+  },
+  pipeBufferSize: {
+    flags: ['-buf', '--pipe-buffer'],
+    type: 'ARGOPT_WITH_DATA',
+    description: 'Buffer size of pipe socket between python processes (Default: 30 = 2^30)',
+    required: false
   }
 }
