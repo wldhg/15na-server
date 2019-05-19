@@ -34,10 +34,10 @@ export const startServer = (log, e, arg, pkg, csi) => {
     }
     // Attach Koa & socket.io
     const app = new Koa()
-    const h2Server = https.createServer({
+    const h2Server = https.createServer(arg.keyPath && arg.certPath ? {
       key: fs.readFileSync(path.resolve(process.cwd(), arg.keyPath)).toString(),
       cert: fs.readFileSync(path.resolve(process.cwd(), arg.certPath)).toString()
-    }, app.callback())
+    } : {}, app.callback())
     const io = new SocketIO(h2Server)
     // Make routers
     ws.route(io, csi)

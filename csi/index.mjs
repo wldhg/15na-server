@@ -40,7 +40,8 @@ const setupPred = (vars, predPath, pipePath) => {
       vars.pipeBufferSize,
       vars.winRow,
       vars.winCol,
-      vars.predictionInterval
+      vars.predictionInterval,
+      vars.gpus
     ], arg.debugClassifier ? { stdio: ['ignore', 1, 2] } : {})
     cp.on('close', () => {
       log.error('Keras server died! Please fix the error and restart irona server.')
@@ -156,6 +157,7 @@ export const getCommonVariables = (_log, _e, _arg) => {
   ret.slideSize = Number(arg.slideInterval) * Number(arg.packetsPerSecond)
   ret.pipeBufferSize = arg.pipeBufferSize || 30
   ret.predictionInterval = arg.predictionInterval || 8
+  ret.gpus = arg.gpuCount || 1
 
   return ret
 }

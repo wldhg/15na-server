@@ -1423,11 +1423,6 @@ levn@^0.3.0, levn@~0.3.0:
     prelude-ls "~1.1.2"
     type-check "~0.3.2"
 
-libsodium@^0.7.4:
-  version "0.7.4"
-  resolved "https://registry.yarnpkg.com/libsodium/-/libsodium-0.7.4.tgz#a5bccd65e3a13b34147ea109be3c65d89f90b074"
-  integrity sha512-fTU3vUdrxQzhPAAjmTSqKk4LzYbR0OtcYjp1P92AlH50JIxXZFEIXWh1yryCmU6RLGfwS2IzBdZjbmpYf/TlyQ==
-
 load-json-file@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/load-json-file/-/load-json-file-2.0.0.tgz#7947e42149af80d696cbf797bcaabcfe1fe29ca8"
@@ -1824,11 +1819,6 @@ punycode@^2.1.0:
   version "2.1.1"
   resolved "https://registry.yarnpkg.com/punycode/-/punycode-2.1.1.tgz#b58b010ac40c22c5657616c8d2c2c02c7bf479ec"
   integrity sha512-XRsRjdf+j5ml+y/6GKHPZbrF/8p2Yga0JPtdqTIY2Xe5ohJPD9saDJJLPvp9+NSBprVvevdXZybnj2cv8OEd0A==
-
-python-shell@^1.0.7:
-  version "1.0.7"
-  resolved "https://registry.yarnpkg.com/python-shell/-/python-shell-1.0.7.tgz#40cf1bea92c888122e3812d1dee809227ecb1212"
-  integrity sha512-k6s27Uj5WEAxFLRKLFUvlDCm1GpkmAQ4vg9CASgqwbHqAM1d1x3nh3bzlBKgmRwNDeLlu0DP41CqwRZn1DKtuA==
 
 react-is@^16.8.1:
   version "16.8.6"

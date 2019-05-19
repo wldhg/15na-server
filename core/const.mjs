@@ -20,7 +20,7 @@ export const APP_FUNC = {
   aio: {
     keyword: 'aio',
     description: 'Open 15na Server, all in one.',
-    options: ['port', 'certPath', 'keyPath', 'noRedirector', 'packetsPerSecond', 'optimizeFactor', 'slideInterval', 'modelDir', 'columnRange', 'notifCond', 'notifID', 'preprocessingServerCount', 'debugClassifier', 'windowLength', 'pipeBufferSize', 'predictionInterval']
+    options: ['port', 'certPath', 'keyPath', 'noRedirector', 'packetsPerSecond', 'optimizeFactor', 'slideInterval', 'modelDir', 'columnRange', 'notifCond', 'notifID', 'preprocessingServerCount', 'debugClassifier', 'windowLength', 'pipeBufferSize', 'predictionInterval', 'gpuCount']
   },
   withPrep: {
     keyword: 'prep',
@@ -30,7 +30,7 @@ export const APP_FUNC = {
   withPred: {
     keyword: 'pred',
     description: 'Open 15na prediction Backend.',
-    options: ['prepServerName', 'modelDir', 'pipeBufferSize', 'predictionInterval', 'debugClassifier', 'notifID']
+    options: ['prepServerName', 'modelDir', 'pipeBufferSize', 'predictionInterval', 'debugClassifier', 'notifID', 'gpuCount']
   }
 }
 export const APP_OPT = {
@@ -135,5 +135,11 @@ export const APP_OPT = {
     type: 'ARGOPT_WITH_DATA',
     description: 'Set preprocessing(central) server name(host).',
     required: true
+  },
+  gpuCount: {
+    flags: ['-gpu', '--gpu-count'],
+    type: 'ARGOPT_WITH_DATA',
+    description: 'Set the number of gpus irona will use if available. (Default: 1)',
+    required: false
   }
 }

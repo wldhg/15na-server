@@ -8,6 +8,7 @@ import sys
 import os
 import multiprocessing as mp
 import keras.models as km
+import keras.utils as ku
 import keras.backend as K
 import numpy as np
 import time
@@ -21,6 +22,10 @@ K.set_session(K.tf.Session(config=K.tf.ConfigProto(
     inter_op_parallelism_threads=MAX_CORE
 )))
 
+# Shut down tensorflow log
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = "2"
+K.tf.logging.set_verbosity(K.tf.logging.ERROR)
+
 # Constants
 SOCKET_PATH = sys.argv[1]
 MODEL_DIR = sys.argv[2]
@@ -30,6 +35,7 @@ PIPE_BUFSIZE = 2**int(sys.argv[5])
 WINDOW_ROW = int(sys.argv[6])
 WINDOW_COL = int(sys.argv[7])
 PRED_INTERVAL = int(sys.argv[8])
+PRED_GPU = int(sys.argv[9])
 
 # Set File Names
 modelName = MODEL_DIR + "/model.h5"
@@ -42,8 +48,11 @@ if 'json' in modelProp:
 else:
     model = km.model_from_yaml(modelPropRaw)
 model.load_weights(modelName)
+if K.tensorflow_backend._get_available_gpus():
+    print(" -- [ PRED ] Using multi gpus:", PRED_GPU)
+    model = ku.multi_gpu_model(model, gpus=PRED_GPU)
 model.compile(loss='categorical_crossentropy', optimizer='adam')
-model._make_predict_function()
+model.predict(np.zeros([1, WINDOW_ROW, WINDOW_COL]))
 
 # Open IPC
 xxLock = th.Lock()
