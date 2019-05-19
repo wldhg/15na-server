@@ -22,24 +22,25 @@ var psRotation = 0
 var pred
 var prep
 
+// CSI parameters
 var windowCount = 0
 var launchCode = 0
 
 // Websocket
 var notifClis = []
 
-const setupPred = (predPath, prepPath, innPath, winRow, winCol, winColStart, winColEnd) => {
+const setupPred = (vars, predPath, pipePath) => {
   pred.server.on('start', () => {
     var cp = child_process.spawn('python', [
       `${process.cwd()}/csi/predict.py`,
       predPath,
       `${process.cwd()}/${arg.modelDir}`,
-      innPath,
+      pipePath,
       psCount,
-      arg.pipeBufferSize || 30,
-      winRow,
-      winCol,
-      arg.predictionInterval || 8
+      vars.pipeBufferSize,
+      vars.winRow,
+      vars.winCol,
+      vars.predictionInterval
     ], arg.debugClassifier ? { stdio: ['ignore', 1, 2] } : {})
     cp.on('close', () => {
       log.error('Keras server died! Please fix the error and restart irona server.')
@@ -47,7 +48,6 @@ const setupPred = (predPath, prepPath, innPath, winRow, winCol, winColStart, win
   })
   pred.server.on('connect', soc => {
     log.success('Keras server is now live.')
-    setupPrep(prepPath, innPath, winRow, winColStart, winColEnd)
     // Register exit handler
     exit.onExit(() => {
       pred.server.stop()
@@ -70,18 +70,18 @@ const setupPred = (predPath, prepPath, innPath, winRow, winCol, winColStart, win
   pred.server.start()
 }
 
-const setupPrep = (prepPath, innPath, winRow, winColStart, winColEnd) => {
+const setupPrep = (vars, prepPath, pipePath, predPath) => {
   prep.server.on('start', () => {
     for (var i = 0; i < psCount; i++) {
       var cp = child_process.spawn('python', [
         `${process.cwd()}/csi/preprocessing.py`,
         prepPath,
-        arg.optimizeFactor || 1,
-        winRow,
-        winColStart,
-        winColEnd,
-        Number(arg.slideInterval) * Number(arg.packetsPerSecond),
-        innPath,
+        vars.optimizeFactor,
+        vars.winRow,
+        vars.winColStart,
+        vars.winColEnd,
+        vars.slideSize,
+        pipePath,
         i + 1
       ], arg.debugClassifier ? { stdio: ['ignore', 1, 2] } : {})
       cp.on('close', () => {
@@ -94,6 +94,9 @@ const setupPrep = (prepPath, innPath, winRow, winColStart, winColEnd) => {
     pss.push(soc)
     if (pss.length === psCount) {
       log.success('All preprocessing servers are successfully loaded!')
+      if (predPath) {
+        setupPred(vars, predPath, pipePath)
+      }
       // Register exit handler
       exit.onExit(() => {
         prep.server.stop()
@@ -103,29 +106,13 @@ const setupPrep = (prepPath, innPath, winRow, winColStart, winColEnd) => {
   prep.server.start()
 }
 
-export const prepare = (_log, _e, _arg) => {
-  // Save global variables
-  log = _log
-  e = _e
-  arg = _arg
-
-  // Random
-  launchCode = rd(0, 281474976710650)
-
-  // Preprocessing server count
-  psCount = Number(arg.preprocessingServerCount) || 4
-
-  // System constants
-
-  const winRow = Math.floor(Math.floor(Number(arg.packetsPerSecond) / Number(arg.optimizeFactor || 1)) * Number(arg.windowLength))
-  const winColStart = Number(arg.columnRange.substring(0, arg.columnRange.indexOf(':')))
-  const winColEnd = Number(arg.columnRange.substring(arg.columnRange.indexOf(':') + 1))
-  const winCol = winColEnd - winColStart
-
-  // Launch IPC server
+export const prepareAll = (_log, _e, _arg) => {
+  const vars = getCommonVariables(_log, _e, _arg)
   const prepPath = `${os.tmpdir()}/${launchCode}-preprocessing.ipc`
   const predPath = `${os.tmpdir()}/${launchCode}-predict.ipc`
-  const innPath = `${os.tmpdir()}/${launchCode}-pipe.ipc`
+  const pipePath = `${os.tmpdir()}/${launchCode}-pipe-{0}.ipc`
+
+  // Launch IPC server
   pred = new ipc.IPC
   prep = new ipc.IPC
   prep.config.rawBuffer = true
@@ -141,7 +128,36 @@ export const prepare = (_log, _e, _arg) => {
   }
 
   // Trigger setup
-  setupPred(predPath, prepPath, innPath, winRow, winCol, winColStart, winColEnd)
+  setupPrep(vars, prepPath, pipePath, predPath)
+}
+
+export const preparePrep = (_log, _e, _arg) => {
+  const vars = getCommonVariables(_log, _e, _arg)
+}
+
+export const getCommonVariables = (_log, _e, _arg) => {
+  // Return set
+  var ret = {}
+
+  // Save global variables
+  log = _log
+  e = _e
+  arg = _arg
+
+  // Constants & arguments without "URLs"
+  launchCode = rd(0, 281474976710650)
+  psCount = Number(arg.preprocessingServerCount) || 4
+
+  ret.winColStart = Number(arg.columnRange.substring(0, arg.columnRange.indexOf(':')))
+  ret.winColEnd = Number(arg.columnRange.substring(arg.columnRange.indexOf(':') + 1))
+  ret.winCol = ret.winColEnd - ret.winColStart
+  ret.winRow = Math.floor(Math.floor(Number(arg.packetsPerSecond) / Number(arg.optimizeFactor || 1)) * Number(arg.windowLength))
+  ret.optimizeFactor = arg.optimizeFactor || 1
+  ret.slideSize = Number(arg.slideInterval) * Number(arg.packetsPerSecond)
+  ret.pipeBufferSize = arg.pipeBufferSize || 30
+  ret.predictionInterval = arg.predictionInterval || 8
+
+  return ret
 }
 
 export const processWindow = (buf) => {
@@ -168,4 +184,11 @@ export const notifRegister = (cli) => {
   cli.on('disconnect', () => {
     clis.splice(clis.indexOf(cli), 1)
   })
+}
+
+export const preparePred = (_log, _e, _arg) => {
+  // Save them
+  log = _log
+  e = _e
+  arg = _arg
 }

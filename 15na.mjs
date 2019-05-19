@@ -8,9 +8,17 @@ init.then(() => {
   log.info(`${pkg.name} ${pkg.version} initialized.`)
 
   switch (arg.fn.keyword) {
-    case 'run':
+    case 'aio':
       // Start websocket server with preparing CSI
-      csi.prepare(log, e, arg)
+      csi.prepareAll(log, e, arg)
       web.startServer(log, e, arg, pkg, csi)
+      break
+    case 'prep':
+      csi.preparePrep(log, e, arg)
+      web.startServer(log, e, arg, pkg, csi)
+      break
+    case 'pred':
+      csi.preparePred(log, e, arg)
+      break
   }
 }).catch(e.parse(0x200, 'Unknown error occurred while executing some code segments.'))

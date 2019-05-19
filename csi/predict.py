@@ -10,7 +10,7 @@ import multiprocessing as mp
 import keras.models as km
 import keras.backend as K
 import numpy as np
-import schedule
+import time
 
 # Set Keras Core
 MAX_CORE = mp.cpu_count()
@@ -64,24 +64,40 @@ with soc.socket(soc.AF_UNIX, soc.SOCK_STREAM) as node:
         else:
             print(" -- [ PRED ] No waiting xx...")
 
-    def procWindow(prep, addr):
-        global xxLock, schedule, xxWaitList
-        while True:
-            try:
-                xx = pickle.loads(prep.recv(PIPE_BUFSIZE))
-                print(" -- [ PRED ] Received pickle...")
-                xxLock.acquire()
-                xxWaitList = np.concatenate((xxWaitList, xx), axis=0)
-                xxLock.release()
-            except pickle.UnpicklingError:
-                print(" -- [ PRED ] Unpickling Error occured!")
-            schedule.run_pending()
+    class Predictor(th.Thread):
+        def __init__ (self, sleep=8):
+            th.Thread.__init__(self, name='Predictor')
+            self.stop_event = th.Event()
+            self.sleep = sleep
+        def run (self):
+            while self.sleep > 0 and not self.stop_event.is_set():
+                th.Thread(target=predict).start()
+                time.sleep(self.sleep)
+        def stop (self):
+            self.stop_event.set()
+        def __enter__ (self):
+            return self
+        def __exit__ (self, *args, **kwargs):
+            self.stop()
 
-    schedule.every(PRED_INTERVAL).seconds.do(predict)
+    def procWindow(pipePath, i):
+        global xxLock, xxWaitList, PIPE_BUFSIZE
+        socPath = pipePath.format(i)
+        with soc.socket(soc.AF_UNIX, soc.SOCK_STREAM) as prep:
+            prep.connect(socPath)
+            print(" -- [ PRED ] Connected to", i, "th preprocessor.")
+            while True:
+                try:
+                    xx = pickle.loads(prep.recv(PIPE_BUFSIZE))
+                    print(" -- [ PRED ] Received pickle...")
+                    xxLock.acquire()
+                    xxWaitList = np.concatenate((xxWaitList, xx), axis=0)
+                    xxLock.release()
+                except pickle.UnpicklingError:
+                    print(" -- [ PRED ] Unpickling Error occured!")
 
-    with soc.socket(soc.AF_UNIX, soc.SOCK_STREAM) as pipe:
-        pipe.bind(PIPE_PATH)
-        pipe.listen(PREP_CNT)
-        while True:
-            acceptedPipe = pipe.accept()
-            th.Thread(target=procWindow, args=acceptedPipe).start()
+    with Predictor(sleep=PRED_INTERVAL) as tp:
+        for i in range(1, PREP_CNT + 1):
+            th.Thread(target=procWindow, args=(PIPE_PATH, i)).start()
+        tp.start()
+        tp.join()

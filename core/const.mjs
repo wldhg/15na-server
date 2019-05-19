@@ -15,12 +15,22 @@ export const LOG_DIR = path.join(DATA_DIR, 'logs')
 export const DB_DIR = path.join(DATA_DIR, 'db')
 
 // [Argument Parsing]
-export const APP_DEFFUNC = 'run'
+export const APP_DEFFUNC = 'aio'
 export const APP_FUNC = {
-  operate: {
-    keyword: 'run',
-    description: 'Open 15na Server!',
+  aio: {
+    keyword: 'aio',
+    description: 'Open 15na Server, all in one.',
     options: ['port', 'certPath', 'keyPath', 'noRedirector', 'packetsPerSecond', 'optimizeFactor', 'slideInterval', 'modelDir', 'columnRange', 'notifCond', 'notifID', 'preprocessingServerCount', 'debugClassifier', 'windowLength', 'pipeBufferSize', 'predictionInterval']
+  },
+  withPrep: {
+    keyword: 'prep',
+    description: 'Open 15na Server, with preprocessing. This will be a main one, which contacts with clients.',
+    options: ['port', 'certPath', 'keyPath', 'noRedirector', 'packetsPerSecond', 'optimizeFactor', 'slideInterval', 'columnRange', 'notifCond', 'notifID', 'preprocessingServerCount', 'debugClassifier', 'windowLength']
+  },
+  withPred: {
+    keyword: 'pred',
+    description: 'Open 15na prediction Backend.',
+    options: ['prepServerName', 'modelDir', 'pipeBufferSize', 'predictionInterval', 'debugClassifier', 'notifID']
   }
 }
 export const APP_OPT = {
@@ -119,5 +129,11 @@ export const APP_OPT = {
     type: 'ARGOPT_WITH_DATA',
     description: 'Time interval of Keras prediction in seconds (Default: 8)',
     required: false
+  },
+  prepServerName: {
+    flags: ['-ps', '--prep-server'],
+    type: 'ARGOPT_WITH_DATA',
+    description: 'Set preprocessing(central) server name(host).',
+    required: true
   }
 }

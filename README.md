@@ -1,6 +1,8 @@
 # 15na Server
 
-Central server program of `15na`.
+Central server program of `15na`.\
+This receives CSI data from `15na-ap`, calibrates them, and classifies them.\
+Multiprocessing on two or more machines over network supported on prediction(classification) stage.
 
 ### Requirements
 
@@ -9,7 +11,6 @@ Central server program of `15na`.
     - `keras` or `keras-gpu`
     - `numpy`
     - `matlab.engine`
-    - `schedule`
 - Node.js 10.x with `yarn`
 
 ### How to run
@@ -18,7 +19,7 @@ Central server program of `15na`.
 $ git clone https://github.com/widh/15na-server.git
 $ cd 15na-server; yarn
 $ # And see this
-$ yarn start -- help run
+$ yarn start -- help
 ```
 
 ### License
