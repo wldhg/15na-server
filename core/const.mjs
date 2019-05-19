@@ -20,7 +20,7 @@ export const APP_FUNC = {
   operate: {
     keyword: 'run',
     description: 'Open 15na Server!',
-    options: ['port', 'certPath', 'keyPath', 'noRedirector', 'packetsPerSecond', 'optimizeFactor', 'slideInterval', 'modelDir', 'columnRange', 'notifCond', 'notifID', 'preprocessingServerCount', 'debugClassifier', 'windowLength', 'pipeBufferSize']
+    options: ['port', 'certPath', 'keyPath', 'noRedirector', 'packetsPerSecond', 'optimizeFactor', 'slideInterval', 'modelDir', 'columnRange', 'notifCond', 'notifID', 'preprocessingServerCount', 'debugClassifier', 'windowLength', 'pipeBufferSize', 'predictionInterval']
   }
 }
 export const APP_OPT = {
@@ -111,7 +111,13 @@ export const APP_OPT = {
   pipeBufferSize: {
     flags: ['-buf', '--pipe-buffer'],
     type: 'ARGOPT_WITH_DATA',
-    description: 'Buffer size of pipe socket between python processes (Default: 30 = 2^30)',
+    description: 'Buffer size of pipe socket between python processes (Default: 20 = 2^20)',
+    required: false
+  },
+  predictionInterval: {
+    flags: ['-pi', '--prediction-interval'],
+    type: 'ARGOPT_WITH_DATA',
+    description: 'Time interval of Keras prediction in seconds (Default: 8)',
     required: false
   }
 }

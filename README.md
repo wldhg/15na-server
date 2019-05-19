@@ -9,6 +9,7 @@ Central server program of `15na`.
     - `keras` or `keras-gpu`
     - `numpy`
     - `matlab.engine`
+    - `schedule`
 - Node.js 10.x with `yarn`
 
 ### How to run

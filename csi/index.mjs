@@ -28,7 +28,7 @@ var launchCode = 0
 // Websocket
 var notifClis = []
 
-const setupPred = (predPath, prepPath, innPath) => {
+const setupPred = (predPath, prepPath, innPath, winRow, winCol, winColStart, winColEnd) => {
   pred.server.on('start', () => {
     var cp = child_process.spawn('python', [
       `${process.cwd()}/csi/predict.py`,
@@ -36,7 +36,10 @@ const setupPred = (predPath, prepPath, innPath) => {
       `${process.cwd()}/${arg.modelDir}`,
       innPath,
       psCount,
-      arg.pipeBufferSize || 30
+      arg.pipeBufferSize || 30,
+      winRow,
+      winCol,
+      arg.predictionInterval || 8
     ], arg.debugClassifier ? { stdio: ['ignore', 1, 2] } : {})
     cp.on('close', () => {
       log.error('Keras server died! Please fix the error and restart irona server.')
@@ -44,7 +47,7 @@ const setupPred = (predPath, prepPath, innPath) => {
   })
   pred.server.on('connect', soc => {
     log.success('Keras server is now live.')
-    setupPrep(prepPath, innPath)
+    setupPrep(prepPath, innPath, winRow, winColStart, winColEnd)
     // Register exit handler
     exit.onExit(() => {
       pred.server.stop()
@@ -56,7 +59,7 @@ const setupPred = (predPath, prepPath, innPath) => {
       console.log(Number(data[i][Number(arg.notifID) - 1]))
       if (Number(data[i][Number(arg.notifID) - 1]) > Number(arg.notifCond)) {
         log.info('FALL DETECTED!')
-        clis.forEach((item) => {
+        notifClis.forEach((item) => {
           try {
             item.emit('fallalert')
           } catch (err) { }
@@ -67,16 +70,16 @@ const setupPred = (predPath, prepPath, innPath) => {
   pred.server.start()
 }
 
-const setupPrep = (prepPath, innPath) => {
+const setupPrep = (prepPath, innPath, winRow, winColStart, winColEnd) => {
   prep.server.on('start', () => {
     for (var i = 0; i < psCount; i++) {
       var cp = child_process.spawn('python', [
         `${process.cwd()}/csi/preprocessing.py`,
         prepPath,
         arg.optimizeFactor || 1,
-        Math.floor(Math.floor(Number(arg.packetsPerSecond) / Number(arg.optimizeFactor || 1)) * Number(arg.windowLength)),
-        arg.columnRange.substring(0, arg.columnRange.indexOf(':')),
-        arg.columnRange.substring(arg.columnRange.indexOf(':') + 1),
+        winRow,
+        winColStart,
+        winColEnd,
         Number(arg.slideInterval) * Number(arg.packetsPerSecond),
         innPath,
         i + 1
@@ -112,6 +115,13 @@ export const prepare = (_log, _e, _arg) => {
   // Preprocessing server count
   psCount = Number(arg.preprocessingServerCount) || 4
 
+  // System constants
+
+  const winRow = Math.floor(Math.floor(Number(arg.packetsPerSecond) / Number(arg.optimizeFactor || 1)) * Number(arg.windowLength))
+  const winColStart = Number(arg.columnRange.substring(0, arg.columnRange.indexOf(':')))
+  const winColEnd = Number(arg.columnRange.substring(arg.columnRange.indexOf(':') + 1))
+  const winCol = winColEnd - winColStart
+
   // Launch IPC server
   const prepPath = `${os.tmpdir()}/${launchCode}-preprocessing.ipc`
   const predPath = `${os.tmpdir()}/${launchCode}-predict.ipc`
@@ -131,7 +141,7 @@ export const prepare = (_log, _e, _arg) => {
   }
 
   // Trigger setup
-  setupPred(predPath, prepPath, innPath)
+  setupPred(predPath, prepPath, innPath, winRow, winCol, winColStart, winColEnd)
 }
 
 export const processWindow = (buf) => {
