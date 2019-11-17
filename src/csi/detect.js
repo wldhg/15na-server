@@ -21,7 +21,7 @@ let alert;
 
 export const init = (core, conf) => {
   // Set logger
-  notiLog = core.log.success;
+  notiLog = core.log.okay;
   if (core.arg.dispPredResults) {
     predLog = (data) => {
       core.log(data, 'Statics');
@@ -106,7 +106,7 @@ export const fromBuffer = (buf) => {
 
 export const setAlerter = (fn) => {
   alert = (prob) => {
-    notiLog('FALL DETECTED!');
+    notiLog('😶 FALL DETECTED!');
     fn(prob);
   };
 };

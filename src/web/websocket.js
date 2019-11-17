@@ -30,10 +30,10 @@ const alertLog = [];
 /* eslint-disable import/prefer-default-export */
 export const route = (core, io, csi, db) => (new Promise((resolve) => {
   // Create websocket loggers
-  Promise.all(
+  Promise.all([
     inLogInstance.init('ws-in.log', core.config.dir.base, core.config.dir.log),
     outLogInstance.init('ws-out.log', core.config.dir.base, core.config.dir.log),
-  ).then(() => {
+  ]).then(() => {
     // Wait 75 ticks for safely load all loggers
     setTimeout(resolve, 300);
   });

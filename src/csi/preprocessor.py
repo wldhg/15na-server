@@ -7,6 +7,9 @@ import matlab.engine as meng
 import socket as soc
 import pickle
 import threading as th
+import atexit
+import signal
+import os
 
 # Config MATLAB
 ml = meng.start_matlab()
@@ -16,7 +19,8 @@ ml.addpath('./src/csi/tools')
 # Constants
 [
   PROCESS_CMD,
-  PP_ID,
+  PP_ID_TEMPLATE,
+  PP_ID_STR,
   PREP_SOC,
   PIPE_TEMPLATE,
   CSI_REDUCE_RESOLUTION_STR,
@@ -30,7 +34,8 @@ ml.addpath('./src/csi/tools')
   CSI_PROCPHASE_STR,
   CSI_PPS_STR
 ] = sys.argv
-PIPE_SOC = PIPE_TEMPLATE.format(PP_ID)
+PP_ID = PP_ID_TEMPLATE.format(int(PP_ID_STR))
+PIPE_SOC = PIPE_TEMPLATE.format(int(PP_ID_STR))
 CSI_REDUCE_RESOLUTION = int(CSI_REDUCE_RESOLUTION_STR)
 CSI_WINSLIDEROW = int(CSI_WINSLIDEROW_STR)
 CSI_WINROW = int(CSI_WINROW_STR)
@@ -43,15 +48,29 @@ CSI_PROCPHASE = CSI_PROCPHASE_STR == 'true'
 CSI_PPS = int(CSI_PPS_STR)
 
 # Set Print
+logPrefix = ">> [PREP - " + PP_ID + "]"
 def log(*args):
-  print(">> [PREP -", PP_ID, "-]", args)
+  print(logPrefix, " ".join(tuple(map(str,args))))
 
 # Open IPC Client to Node
+stoppie = False
 with soc.socket(soc.AF_UNIX, soc.SOCK_STREAM) as node:
   node.connect(PREP_SOC)
   with soc.socket(soc.AF_UNIX, soc.SOCK_STREAM) as pipe:
     pipe.bind(PIPE_SOC)
     pipe.listen(1)
+
+    def closePipe(placeholder1=None, placeholder2=None):
+      stoppie = True
+      try:
+        os.unlink(PIPE_SOC)
+        pipe.close()
+      except:
+        pass
+
+    atexit.register(closePipe)
+    signal.signal(signal.SIGINT, closePipe)
+    signal.signal(signal.SIGTERM, closePipe)
 
     def preprocess(pred, addr):
       global node
@@ -62,7 +81,7 @@ with soc.socket(soc.AF_UNIX, soc.SOCK_STREAM) as node:
 
         # Read Datfile,
         log("RAW Data received. Preprocessing...")
-        cat = np.asarray(ml.preprocess(datPath, PP_ID, CSI_REDUCE_RESOLUTION, CSI_PPS, CSI_PROCAMP, CSI_PROCPHASE, CSI_WINCOL_PER_PAIR, CSI_TX, CSI_RX))
+        cat = np.asarray(ml.preprocess(datPath, PP_ID, CSI_REDUCE_RESOLUTION, CSI_PPS,  CSI_PROCAMP, CSI_PROCPHASE, CSI_WINCOL_PER_PAIR, CSI_TX, CSI_RX))
 
         # Get Windows without timestamp
         log("Applying sliding window...")
@@ -84,5 +103,11 @@ with soc.socket(soc.AF_UNIX, soc.SOCK_STREAM) as node:
         log("Windows sent. Wait for new data...")
 
     while True:
-      acceptedPipe = pipe.accept()
-      th.Thread(target=preprocess, args=acceptedPipe).start()
+      try:
+        acceptedPipe = pipe.accept()
+        th.Thread(target=preprocess, args=acceptedPipe).start()
+      except OSError:
+        pass
+      except Exception as e:
+        if not stoppie:
+          raise e

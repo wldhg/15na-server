@@ -87,6 +87,7 @@ typings/
 model/
 data/
 certs/
+ipynb/
 
 # VS Code
 .vscode/

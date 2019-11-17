@@ -12,12 +12,12 @@ function ret = preprocess(
   end
 
   % Extract CSI information for each packet
-  fprintf('>> [PREP - %d -]   ~> Have CSI for %d packets\n', ppid, length(raw_data));
+  fprintf('>> [PREP - %s]   ~> Have CSI for %d packets\n', ppid, length(raw_data));
 
   % Check Tx/Rx count -- Do this in here cuz Tx/Rx config can change from outside.
   % From here, use ltx|lrx instead raw_data{1}.Ntx|Nrx.
   if (raw_data{1}.Ntx < max(tx) || raw_data{1}.Nrx < max(rx))
-    fprintf('>> [PREP - %d -]   ~> Tx/Rx does not match. Stop these packets.\n', ppid, length(raw_data));
+    fprintf('>> [PREP - %s]   ~> Tx/Rx does not match. Stop these packets.\n', ppid, length(raw_data));
     return;
   end
   ltx = length(tx);
@@ -31,7 +31,7 @@ function ret = preprocess(
   timestamp = zeros(length(raw_data), 1);
 
   % Scaled into linear with selection tx/rx pairs -- Filter TR Pair in here
-  fprintf('>> [PREP - %d -]   ~> Scaling into linear\n', ppid);
+  fprintf('>> [PREP - %s]   ~> Scaling into linear\n', ppid);
   for pidx = 1:length(raw_data)
     ocsi(pidx, :, :, :) = get_scaled_csi(raw_data{pidx});
     timestamp(pidx) = (raw_data{pidx}.timestamp_low - raw_data{1}.timestamp_low) * 1.0e-6;
@@ -46,10 +46,10 @@ function ret = preprocess(
 
   % Convert to real values & preprocess (amp & phase) -- Filter Phase/Amp in here
   if (procAmp)
-    fprintf('>> [PREP - %d -]   ~> Permuting amplitude\n', ppid);
+    fprintf('>> [PREP - %s]   ~> Permuting amplitude\n', ppid);
     ocsi_amp = permute(db(abs(csi) + 1), [2 3 4 1]);
     csi_amp = zeros(ltx, lrx, 30, lpkt);
-    fprintf('>> [PREP - %d -]   ~> Applying Hampel filter to amplitude\n', ppid);
+    fprintf('>> [PREP - %s]   ~> Applying Hampel filter to amplitude\n', ppid);
     for t = 1:ltx
       for r = 1:lrx
         for ch = 1:30
@@ -64,10 +64,10 @@ function ret = preprocess(
     end
   end
   if (procPhase)
-    fprintf('>> [PREP - %d -]   ~> Permuting phase\n', ppid);
+    fprintf('>> [PREP - %s]   ~> Permuting phase\n', ppid);
     ocsi_phase = permute(angle(csi), [2 3 4 1]);
     csi_phase = zeros(ltx, lrx, 30, lpkt);
-    fprintf('>> [PREP - %d -]   ~> Calibrating phase\n', ppid);
+    fprintf('>> [PREP - %s]   ~> Calibrating phase\n', ppid);
     for k = 1:ltx
       for m = 1:lrx
         for j = 1:length(raw_data)
@@ -81,7 +81,7 @@ function ret = preprocess(
   end
 
   % Export to windows
-  fprintf('>> [PREP - %d -]   ~> Merging into windows\n', ppid);
+  fprintf('>> [PREP - %s]   ~> Merging into windows\n', ppid);
   ret = zeros(lpkt, colPerPair * lpair);
   if (procPhase && procAmp)
     if (ltx == 1)
@@ -161,5 +161,5 @@ function ret = preprocess(
     end
   end
 
-  fprintf('>> [PREP - %d -]   ~> Finished\n', ppid);
+  fprintf('>> [PREP - %s]   ~> Finished\n', ppid);
 end

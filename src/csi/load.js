@@ -20,8 +20,13 @@ export const load = (core) => {
   detect.init(core, conf);
   window.init(core, ipc, launchCode);
 
+  // Display config
+  if (core.arg.dispInterpretedConfig) {
+    core.log.debug(conf, 'Config');
+  }
+
   // Config Preprocessing Server
-  if (core.arg.dispPrepResults) {
+  if (core.arg.dispPrepOutput) {
     core.log.warn('The output of preprocessors will be printed through standard output. This can downgrade the performance.');
   }
 
@@ -30,6 +35,7 @@ export const load = (core) => {
     for (let i = 0; i < conf.preprocessors; i += 1) {
       const py = spawn('python', [
         `${process.cwd()}/src/csi/preprocessor.py`,
+        conf.ppidTemplate,
         i + 1,
         conf.prepPath,
         conf.pipePath,
@@ -43,7 +49,7 @@ export const load = (core) => {
         conf.csiProcAmp,
         conf.csiProcPhase,
         conf.csiPPS,
-      ], core.arg.dispPrepResults ? { stdio: ['ignore', 1, 2] } : {});
+      ], core.arg.dispPrepOutput ? { stdio: ['ignore', 1, 2] } : {});
       py.on('close', () => {
         core.log.warn(`${core.util.ordinalSuffix(i + 1)} preprocessing process died!`);
       });
@@ -54,15 +60,18 @@ export const load = (core) => {
     core.log.info(`A preprocessor is now live. (Now ${ppSockets.length + 1} alive)`);
     ppSockets.push(soc);
     if (ppSockets.length === conf.preprocessors) {
-      core.log.success('All preprocessors are successfully loaded.');
+      core.log.okay('All preprocessors are successfully loaded.');
       window.registerPPSockets(ppSockets);
       ipc.pred.server.start();
     }
   });
 
   // Config Predictor Server
-  if (core.arg.dispPredResults) {
+  if (core.arg.dispPredOutput) {
     core.log.warn('The output of predictors will be printed through standard output. This can downgrade the performance.');
+  }
+  if (core.arg.dispPredResults) {
+    core.log.warn('The prediction result may be printed through standard output. This can downgrade the performance.');
   }
 
   ipc.pred.server.on('start', () => {
@@ -77,14 +86,14 @@ export const load = (core) => {
       conf.csiWindowRow,
       conf.csiWindowColumn,
       conf.predInterval,
-    ], core.arg.dispPredResults ? { stdio: ['ignore', 1, 2] } : {});
+    ], core.arg.dispPredOutput ? { stdio: ['ignore', 1, 2] } : {});
     py.on('close', () => {
       core.log.warn('Keras prediction process died!');
     });
     core.onExit(() => py.kill('SIGKILL'));
   });
   ipc.pred.server.on('connect', () => {
-    core.log.success('Keras server is now live.');
+    core.log.okay('Keras server is now live.');
     isPredictorReady = true;
   });
   ipc.pred.server.on('data', detect.fromBuffer);

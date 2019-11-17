@@ -34,7 +34,7 @@ export const arg = {
         // CSI module
         'modelDir', 'gpuNumber', 'preprocessingServerCount', 'predictionInterval', 'pipeBufferSize',
         'windowLength', 'windowInterval', 'packetsPerSecond', 'txAntenna', 'rxAntenna', 'disableAmplitude', 'disablePhase', 'reduceResolution',
-        'dispPredResults', 'dispPredOutput', 'dispPrepOutput', 'modeledLabels',
+        'dispInterpretedConfig', 'dispPredResults', 'dispPredOutput', 'dispPrepOutput', 'modeledLabels',
         'notifProbCond', 'notifRepeatCond', 'notifID',
 
       ],
@@ -155,6 +155,12 @@ export const arg = {
 
     /* Logging-Debug related display options */
 
+    dispInterpretedConfig: {
+      flags: ['-disp-conf', '--display-interpreted-configs'],
+      type: 'flag',
+      description: 'Display config interpretation',
+      required: false,
+    },
     dispPredResults: {
       flags: ['-disp-pred', '--display-prediction-results'],
       type: 'flag',

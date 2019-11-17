@@ -1,4 +1,4 @@
-#!/usr/bin/env node --experimental-modules
+#!/usr/bin/env -S node --experimental-modules
 
 /* IRONA Server is subject to the terms of the Mozilla Public License 2.0.
  * You can obtain a copy of MPL at LICENSE.md of repository root. */
@@ -9,10 +9,11 @@ import * as core from './core/load.js';
 core.init.then(() => {
   core.log.info(`${core.config.name.full} ${core.config.version} initialized.`);
 
+  let future;
   switch (core.arg.fn.keyword) {
     default:
     case 'launch':
-      Promise.all([
+      future = Promise.all([
         import('./csi/load.js'),
         import('./db/load.js'),
         import('./web/load.js'),
@@ -24,4 +25,6 @@ core.init.then(() => {
       }));
       break;
   }
+
+  return future;
 }).catch(core.err.parse('Unexpected error occured.'));

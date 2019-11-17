@@ -11,9 +11,13 @@ let cliDB;
 let rng;
 let log;
 
-export const load = (core) => {
-  db = tdb.ns('db', { dbPath: core.config.dir.db });
+export const load = async (core) => {
+  await core.util.mkdir(core.config.dir.base, core.config.dir.db);
 
+  db = tdb.ns('db', {
+    basePath: core.config.dir.base,
+    dbPath: core.config.dir.db,
+  });
   areaDB = db.db('area');
   apDB = db.db('ap');
   cliDB = db.db('cli');
@@ -31,7 +35,7 @@ export const load = (core) => {
   };
   log = core.log;
 
-  return Promise.all(areaDB.loading, cliDB.loading, apDB.loading);
+  return Promise.all([areaDB.loading, cliDB.loading, apDB.loading]);
 };
 
 export const queryAreaID = (aid) => areaDB.load(aid);
@@ -46,7 +50,7 @@ export const addArea = (name) => {
     areaDB.save(aid, {
       name, aid, ap: [], cli: [],
     });
-    log.success(`New area named "${name}" created: ${aid}`);
+    log.okay(`New area named "${name}" created: ${aid}`);
   }
 };
 export const delArea = (aid) => {
@@ -72,7 +76,7 @@ export const addAP = (name, aid) => {
       const apid = rng(apDB);
       apDB.save(apid, { name, apid, aid });
       area.ap.push(apid);
-      log.success(`New AP named "${name}" created: ${apid}`);
+      log.okay(`New AP named "${name}" created: ${apid}`);
     }
   }).catch(() => {
     log.error(`There's no area with id "${aid}".`);
@@ -104,7 +108,7 @@ export const addClient = (name, aids) => {
       const cid = rng(cliDB);
       cliDB.save(cid, { name, cid, aids });
       for (let i = 0; i < areas.length; i += 1) areas[i].cli.push(cid);
-      log.success(`New client named "${name}" created: ${cid}`);
+      log.okay(`New client named "${name}" created: ${cid}`);
     }
   }).catch(() => {
     log.error('Cannot find an area. Please check area name one more time.');

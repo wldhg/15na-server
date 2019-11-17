@@ -7,22 +7,28 @@ import os from 'os';
 export const parse = (launchCode, arg) => {
   const data = {};
 
-  data.pipePath = `${os.tmpdir()}/${launchCode}-pipe-{0}.ipc`;
-  data.prepPath = `${os.tmpdir()}/${launchCode}-preprocessor.ipc`;
-  data.predPath = `${os.tmpdir()}/${launchCode}-predictor.ipc`;
+  data.preprocessors = arg.preprocessingServerCount || 4;
+
+  data.ppidTemplate = `{0:0${Math.max(2, Math.ceil(Math.log(data.preprocessors) / Math.LN10))}d}`;
+  data.pipePath = `${os.tmpdir()}/irona-${launchCode}-pipe-${data.ppidTemplate}.ipc`;
+  data.prepPath = `${os.tmpdir()}/irona-${launchCode}-preprocessor.ipc`;
+  data.predPath = `${os.tmpdir()}/irona-${launchCode}-predictor.ipc`;
 
   data.relativeModelDir = `${process.cwd()}/${arg.modelDir}`;
-
-  data.preprocessors = arg.preprocessingServerCount || 4;
-  data.csiTxAntenna = arg.txAntenna ? arg.txAntenna.split(',') : ['1'];
-  data.csiRxAntenna = arg.rxAntenna ? arg.rxAntenna.split(',') : ['1'];
-  data.csiWindowRow = arg.windowLength * arg.packetsPerSecond;
-  data.csiSlideRow = arg.windowInterval * arg.packetsPerSecond;
-  data.csiPPS = arg.packetsPerSecond;
 
   data.csiProcAmp = !arg.disableAmplitude;
   data.csiProcPhase = !arg.disablePhase;
   data.csiRedResolution = arg.reduceResolution || 1;
+
+  data.csiTxAntenna = arg.txAntenna ? arg.txAntenna.split(',') : ['1'];
+  data.csiRxAntenna = arg.rxAntenna ? arg.rxAntenna.split(',') : ['1'];
+  data.csiWindowRow = Math.floor(
+    arg.windowLength * (arg.packetsPerSecond / data.csiRedResolution),
+  );
+  data.csiSlideRow = Math.floor(
+    arg.windowInterval * (arg.packetsPerSecond / data.csiRedResolution),
+  );
+  data.csiPPS = arg.packetsPerSecond;
 
   data.pipeBufferSize = arg.pipeBufferSize || 30;
   data.predInterval = arg.predictionInterval || 8;
@@ -35,7 +41,7 @@ export const parse = (launchCode, arg) => {
                          * data.csiTxAntenna.length
                          * data.csiRxAntenna.length;
 
-  data.modelLabels = arg.modeledLabels.split(',');
+  data.modelLabels = arg.modeledLabels ? arg.modeledLabels.split(',') : [];
 
   return data;
 };

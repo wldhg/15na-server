@@ -1,6 +1,7 @@
 # 15na Server
 
-Central server program of `15na`.\
+Central server program of `15na`.
+
 With running websocket server, `15na-server` receives CSI data from `15na-ap`, and classifies them.\
 If fall is detected, this make alert at `15na-cli`.
 
@@ -10,7 +11,7 @@ If fall is detected, this make alert at `15na-cli`.
 - Intel 5300 WLAN card `with CSI-Tool installation`
 
 ##### Software
-- MATLAB R2015b+ <a href="#why-matlab"><sup>*</sup></a>
+- MATLAB R2015b+ <a href="#why-matlab"><sup>Really?</sup></a>
 - Python 3.6+
     - `keras` or `keras-gpu` with `tensorflow` backend
     - `numpy`

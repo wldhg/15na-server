@@ -13,10 +13,12 @@ import keras.utils as ku
 import keras.backend as kb
 import numpy as np
 import time
+import tensorflow as tf
+import logging
 
 # Set Print
 def log(*args):
-  print(">> [PREDICTOR]", args)
+  print(">> [PREDICTOR]", " ".join(tuple(map(str, args))))
 
 # Constants
 [
@@ -25,12 +27,17 @@ def log(*args):
   PIPE_TEMPLATE,
   MODEL_DIR,
   GPU_CONFIG,
-  PREP_COUNT,
-  PIPE_BUFSIZE,
-  CSI_WINROW,
-  CSI_WINCOL,
-  PRED_INTERVAL
+  PREP_COUNT_STR,
+  PIPE_BUFSIZE_STR,
+  CSI_WINROW_STR,
+  CSI_WINCOL_STR,
+  PRED_INTERVAL_STR
 ] = sys.argv
+PREP_COUNT = int(PREP_COUNT_STR)
+PIPE_BUFSIZE = int(PIPE_BUFSIZE_STR)
+CSI_WINROW = int(CSI_WINROW_STR)
+CSI_WINCOL = int(CSI_WINCOL_STR)
+PRED_INTERVAL = int(PRED_INTERVAL_STR)
 
 # Set CUDA
 if GPU_CONFIG != 'unset':
@@ -40,16 +47,12 @@ if GPU_CONFIG != 'unset':
 MAX_CORE = mp.cpu_count()
 os.environ['OMP_NUM_THREADS'] = str(MAX_CORE)
 os.environ['KMP_AFFINITY'] = "noverbose,warnings,norespect,granularity=thread,scatter,0,0"
-kb.set_session(kb.tf.Session(
-  config=kb.tf.ConfigProto(
-    intra_op_parallelism_threads=MAX_CORE,
-    inter_op_parallelism_threads=MAX_CORE
-  )
-))
+tf.config.threading.set_inter_op_parallelism_threads(MAX_CORE)
+tf.config.threading.set_intra_op_parallelism_threads(MAX_CORE)
 
 # Shut down tensorflow log
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = "2"
-kb.tf.logging.set_verbosity(kb.tf.logging.ERROR)
+tf.get_logger().setLevel(logging.ERROR)
 
 # Set File Names
 modelName = MODEL_DIR + "/model.h5"
@@ -133,6 +136,6 @@ with soc.socket(soc.AF_UNIX, soc.SOCK_STREAM) as node:
 
   with Predictor(sleep=PRED_INTERVAL) as tp:
     for i in range(1, PREP_COUNT + 1):
-      th.Thread(target=acceptWindow, args=(i)).start()
+      th.Thread(target=acceptWindow, args=(i,)).start()
     tp.start()
     tp.join()

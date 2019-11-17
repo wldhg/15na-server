@@ -57,7 +57,7 @@ export const parse = (description, exitCode = 0) => {
       }
 
       if (e.more instanceof Object) {
-        const keys = Object.keys(e);
+        const keys = Object.keys(e.more);
         for (let i = 0; i < keys.length; i += 1) {
           log.debug(e.more[keys[i]], keys[i]);
         }

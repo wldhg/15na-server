@@ -14,13 +14,25 @@ export const init = (core, conf) => {
   pred.config.rawBuffer = true;
   pred.config.silent = true;
 
+  // Launch check variables
+  let isPrepIPCStarted = false;
+  let isPredIPCStarted = false;
+
   // Launch IPC
-  prep.serve(conf.prepPath);
-  pred.serve(conf.predPath);
+  prep.serve(conf.prepPath, () => {
+    isPrepIPCStarted = true;
+  });
+  pred.serve(conf.predPath, () => {
+    isPredIPCStarted = true;
+  });
 
   // Register onExit handler
   core.onExit(() => {
-    prep.server.stop();
-    pred.server.stop();
+    if (isPrepIPCStarted) {
+      prep.server.stop();
+    }
+    if (isPredIPCStarted) {
+      pred.server.stop();
+    }
   });
 };

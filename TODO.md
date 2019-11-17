@@ -1,3 +1,4 @@
-[] Remove MATLAB codes (convert to Julia or Python)
-[] Provide web interface
-[] Support client/AP authentication
+- [ ] Remove MATLAB codes (convert to Julia or Python)
+- [ ] Provide web interface
+- [ ] Support client/AP authentication
+- [ ] Change to another websocket library which supports C++
