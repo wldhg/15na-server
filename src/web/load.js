@@ -33,10 +33,16 @@ export const load = async (core, csi, db) => {
 
     // Attach Koa & socket.io
     const app = new Koa();
-    const h2Server = https.createServer(core.arg.keyPath && core.arg.certPath ? {
-      key: fs.readFileSync(path.resolve(process.cwd(), core.arg.keyPath)).toString(),
-      cert: fs.readFileSync(path.resolve(process.cwd(), core.arg.certPath)).toString(),
-    } : {}, app.callback());
+    let h2Server;
+    if (core.arg.keyPath && core.arg.certPath) {
+      h2Server = https.createServer({
+        key: fs.readFileSync(path.resolve(process.cwd(), core.arg.keyPath)).toString(),
+        cert: fs.readFileSync(path.resolve(process.cwd(), core.arg.certPath)).toString(),
+        secureProtocol: 'TLS_method',
+      }, app.callback());
+    } else {
+      h2Server = http.createServer(app.callback());
+    }
     const io = new SocketIO(h2Server);
 
     // Prepare DB
