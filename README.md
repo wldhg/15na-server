@@ -1,27 +1,45 @@
 # 15na Server
 
 Central server program of `15na`.\
-This receives CSI data from `15na-ap`, calibrates them, and classifies them.\
-Multiprocessing on two or more machines over network supported on prediction(classification) stage.
+With running websocket server, `15na-server` receives CSI data from `15na-ap`, and classifies them.\
+If fall is detected, this make alert at `15na-cli`.
 
 ### Requirements
 
-- MATLAB 2015+
-- Python 3.6
-    - `keras` or `keras-gpu` with `tensorflow` backend.
+##### Hardware
+- Intel 5300 WLAN card `with CSI-Tool installation`
+
+##### Software
+- MATLAB R2015b+ <a href="#why-matlab"><sup>*</sup></a>
+- Python 3.6+
+    - `keras` or `keras-gpu` with `tensorflow` backend
     - `numpy`
     - `matlab.engine`
-- Node.js 10.x with `yarn`
+- Node.js 12+
 
 ### How to run
 
 ```bash
-$ git clone https://github.com/widh/15na-server.git
-$ cd 15na-server; yarn
-$ # And see this
-$ yarn start -- help
+# Clone the repository
+git clone https://github.com/widh/15na-server.git
+# Run yarn or npm
+cd 15na-server; yarn
+# And look help
+yarn start -- help
 ```
 
 ### License
 
-MPL 2.0
+This project follows [Mozilla Public License 2.0](LICENSE.md).
+
+---
+### Questions
+
+###### Why MATLAB?
+I understand MATLAB is slow and not usable in most environment, because of the license problem. So, in coming version, I'll remove MATLAB code and replace it to C++ or Julia or Python-based code. The exact language is not determined yet.
+
+###### How about support Atheros CSITool?
+Not planed yet.
+
+###### Is this only for fall detection?
+No.

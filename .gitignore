@@ -83,9 +83,10 @@ typings/
 # DynamoDB Local files
 .dynamodb/
 
-# 15na DB
-db/
-
-# 15na model
+# 15na non-codes
 model/
-amphase-quarter-1.00/
+data/
+certs/
+
+# VS Code
+.vscode/
