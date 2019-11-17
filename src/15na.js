@@ -66,9 +66,8 @@ core.init.then(() => {
         return dbModFuture;
       }).then(() => {
         core.log.okay('All database modification finished successfully.');
-      }).catch((e) => {
+      }).catch(() => {
         core.log.error('Failed to modify database.');
-        core.log.debug(e);
       });
       break;
   }

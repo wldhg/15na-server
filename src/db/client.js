@@ -33,7 +33,10 @@ export const add = (name, aids) => {
     } else {
       const cid = rng();
       cliDB.save(cid, { name, cid, aids });
-      for (let i = 0; i < areas.length; i += 1) areas[i].cli.push(cid);
+      for (let i = 0; i < areas.length; i += 1) {
+        areas[i].cli.push(cid);
+        areaDB.save(aids[i], areas[i]);
+      }
       log.okay(`New client named "${name}" created: ${cid}`);
     }
   }).catch(() => {
@@ -48,9 +51,10 @@ export const remove = (cid) => cliDB.load(cid).then((cli) => {
   return Promise.all(aidFinds).then((areas) => {
     for (let i = 0; i < areas.length; i += 1) {
       areas[i].cli.splice(areas[i].cli.indexOf(cid), 1);
-      cliDB.del({ cid });
-      log.info('An client deleted.');
+      areaDB.save(cli.aids[i], areas[i]);
     }
+    cliDB.del({ cid });
+    log.info('An client deleted.');
   }).catch(() => {
     log.error('Cannot find an area.');
   });

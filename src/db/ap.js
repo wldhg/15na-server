@@ -30,6 +30,7 @@ export const add = (name, aid) => areaDB.load(aid).then((area) => {
     const apid = rng();
     apDB.save(apid, { name, apid, aid });
     area.ap.push(apid);
+    areaDB.save(aid, area);
     log.okay(`New AP named "${name}" created: ${apid}`);
   }
 }).catch(() => {
@@ -42,6 +43,7 @@ export const remove = (apid) => apDB.load(apid).then((ap) => {
     log.error('Failed to find area of AP.');
   } else {
     area.ap.splice(area.ap.indexOf(apid), 1);
+    areaDB.save(ap.aid, area);
     apDB.del({ apid });
     log.info('An AP deleted.');
   }
