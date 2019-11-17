@@ -1,13 +1,13 @@
 {
   "name": "15na-server",
-  "version": "1.5.0-alpha.1",
+  "version": "1.5.0-alpha.2",
   "description": "Real-time CSI classifier",
   "main": "src/15na.js",
   "bin": {
     "15na": "./src/15na.js"
   },
   "repository": "https://github.com/widh/15na-server.git",
-  "author": "Jio Gim <jio@widh.me>",
+  "author": "Jio Gim <jio@wldh.org>",
   "license": "MPL-2.0",
   "private": true,
   "type": "module",
@@ -26,8 +26,7 @@
   "scripts": {
     "lint": "npx eslint ./**/*.js",
     "lint-fix": "npx eslint ./**/*.js --fix",
-    "start": "node --experimental-modules src/15na.js",
-    "show-help": "node --experimental-modules src/15na.js help"
+    "start": "node --experimental-modules ./src/15na.js"
   },
   "dependencies": {
     "colors": "^1.4.0",

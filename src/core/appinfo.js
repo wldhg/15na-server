@@ -39,8 +39,70 @@ export const arg = {
 
       ],
     },
+    auth: {
+      keyword: 'auth-config',
+      description: 'Configure authentication and AP/Client registration.',
+      options: [
+
+        // Area
+        'addArea', 'deleteArea',
+
+        // AP
+        'addAP', 'deleteAP',
+
+        // Client
+        'addClient', 'deleteClient',
+
+      ],
+    },
   },
   opt: {
+
+    /* Authentication-config-related features */
+    addArea: {
+      flags: ['--add-area'],
+      type: 'string',
+      description: 'Add an area with name',
+      required: false,
+      multiple: true,
+    },
+    deleteArea: {
+      flags: ['--del-area'],
+      type: 'string',
+      description: 'Delete an area with Area ID',
+      required: false,
+      multiple: true,
+    },
+    addAP: {
+      flags: ['--add-ap'],
+      type: 'string',
+      description: 'Add an access point with name and AreaID (e.g. NAME AID)',
+      required: false,
+      inputCount: 2,
+      multiple: true,
+    },
+    deleteAP: {
+      flags: ['--del-ap'],
+      type: 'string',
+      description: 'Delete an access point with APID',
+      required: false,
+      multiple: true,
+    },
+    addClient: {
+      flags: ['--add-cli'],
+      type: 'string',
+      description: 'Add a client with name and AreaIDs (e.g. NAME AID1|AID2|AID3)',
+      required: false,
+      inputCount: 2,
+      multiple: true,
+    },
+    deleteClient: {
+      flags: ['--del-cli'],
+      type: 'string',
+      description: 'Delete a client with ClientID',
+      required: false,
+      multiple: true,
+    },
 
     /* Web features */
 

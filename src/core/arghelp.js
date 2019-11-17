@@ -280,14 +280,15 @@ export const parse = (config, command) => {
     let dataRequiredOriginal = 0;
     let dataType;
     let dataName;
-    let isMultipleData = false;
+    let dataPool;
+    let isMultipleInput = false;
     process.argv.slice(analyzed.fn.isDefault ? 2 : 3).forEach((arg) => {
       if (dataRequired > 0) {
         const parsedValue = refineValue(arg, dataType);
-        if (isMultipleData) {
-          analyzed[dataName].push(parsedValue);
+        if (isMultipleInput) {
+          dataPool[dataName].push(parsedValue);
         } else {
-          analyzed[dataName] = parsedValue;
+          dataPool[dataName] = parsedValue;
         }
         dataRequired -= 1;
       } else if (arg.charAt(0) === '-') {
@@ -303,18 +304,26 @@ export const parse = (config, command) => {
           if (selectedOption.type === 'flag') {
             analyzed[selectedOption.name] = true;
           } else {
-            if (selectedOption.count && selectedOption.count > 1) {
-              isMultipleData = true;
-              dataRequired = selectedOption.count;
-              dataRequiredOriginal = selectedOption.count;
-              analyzed[selectedOption.name] = [];
+            if (selectedOption.multiple) {
+              if (!analyzed[selectedOption.name]) analyzed[selectedOption.name] = [];
+              dataPool = analyzed[selectedOption.name];
+              dataName = dataPool.length;
+              dataType = selectedOption.type;
             } else {
-              isMultipleData = false;
+              dataPool = analyzed;
+              dataName = selectedOption.name;
+              dataType = selectedOption.type;
+            }
+            if (selectedOption.inputCount && selectedOption.inputCount > 1) {
+              isMultipleInput = true;
+              dataRequired = selectedOption.inputCount;
+              dataRequiredOriginal = selectedOption.inputCount;
+              dataPool[dataName] = [];
+            } else {
+              isMultipleInput = false;
               dataRequired = 1;
               dataRequiredOriginal = 1;
             }
-            dataName = selectedOption.name;
-            dataType = selectedOption.type;
           }
         } else {
           reject(

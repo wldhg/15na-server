@@ -7,31 +7,35 @@ If fall is detected, this make alert at `15na-cli`.
 
 ### Requirements
 
-##### Hardware
+#### Hardware
 - Intel 5300 WLAN card `with CSI-Tool installation`
 
-##### Software
-- MATLAB R2015b+ <a href="#why-matlab"><sup>Really?</sup></a>
-- Python 3.6+
+#### Software
+- **MATLAB** R2015b+ <a href="#why-matlab"><sup>Really?</sup></a>
+- **Python** 3.6+\
+  dependency list in `requirements.txt`.
     - `keras` or `keras-gpu` with `tensorflow` backend
     - `numpy`
     - `matlab.engine`
-- Node.js 12+
+- **Node.js** 12+\
+  dependency list in `yarn.lock` and `package.json`.
 
 ### How to run
 
 ```bash
 # Clone the repository
 git clone https://github.com/widh/15na-server.git
+
 # Run yarn or npm
 cd 15na-server; yarn
+
 # And look help
-yarn start -- help
+./15na help
 ```
 
 ### License
 
-This project follows [Mozilla Public License 2.0](LICENSE.md).
+This project follows [Mozilla Public License 2.0](LICENSE.md#readme).
 
 ---
 ### Questions
