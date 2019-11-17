@@ -68,8 +68,8 @@ else:
   model = km.model_from_yaml(modelPropRaw)
 model.load_weights(modelName)
 if kb.tensorflow_backend._get_available_gpus():
-  GPU_COUNT = GPU_CONFIG.split(',')
-  log("Using gpu(s):", GPU_COUNT)
+  GPU_COUNT = len(GPU_CONFIG.split(','))
+  log("Using gpu(s):", GPU_CONFIG, "(" + str(GPU_COUNT) + ")")
   model = ku.multi_gpu_model(model, gpus=GPU_COUNT)
 model.compile(loss='categorical_crossentropy', optimizer='adam')
 model.predict(np.zeros([1, CSI_WINROW, CSI_WINCOL]))
