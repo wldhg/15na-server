@@ -33,7 +33,7 @@ export const arg = {
 
         // CSI module
         'modelDir', 'gpuNumber', 'preprocessingServerCount', 'predictionInterval', 'pipeBufferSize',
-        'windowLength', 'windowInterval', 'packetsPerSecond', 'txAntenna', 'rxAntenna', 'disableAmplitude', 'disablePhase', 'reduceResolution',
+        'windowLength', 'windowInterval', 'packetsPerSecond', 'txAntenna', 'rxAntenna', 'disableAmplitude', 'disablePhase', 'reduceResolution', 'leavePackets',
         'dispInterpretedConfig', 'dispPredResults', 'dispPredOutput', 'dispPrepOutput', 'modeledLabels',
         'notifProbCond', 'notifRepeatCond', 'notifID',
 
@@ -212,6 +212,12 @@ export const arg = {
       flags: ['-res', '--reduce-resolution'],
       type: 'number',
       description: 'Reduces input packet of preprocessor by this. So, 1/n of the original packet may processed. (Default: 1)',
+      required: false,
+    },
+    leavePackets: {
+      flags: ['-leave', '--leave-packets'],
+      type: 'flag',
+      description: 'Leave all packet data in OS temp directory.',
       required: false,
     },
 

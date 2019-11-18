@@ -43,5 +43,7 @@ export const parse = (launchCode, arg) => {
 
   data.modelLabels = arg.modeledLabels ? arg.modeledLabels.split(',') : [];
 
+  data.leaveDat = arg.leavePackets ? 'true' : 'false';
+
   return data;
 };

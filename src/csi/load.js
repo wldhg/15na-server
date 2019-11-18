@@ -49,6 +49,7 @@ export const load = (core) => {
         conf.csiProcAmp,
         conf.csiProcPhase,
         conf.csiPPS,
+        conf.leaveDat,
       ], core.arg.dispPrepOutput ? { stdio: ['ignore', 1, 2] } : {});
       py.on('close', () => {
         core.log.warn(`${core.util.ordinalSuffix(i + 1)} preprocessing process died!`);

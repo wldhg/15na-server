@@ -45,23 +45,28 @@ export const route = (core, io, csi, db) => (new Promise((resolve) => {
       lin.debug('An AP disconnected.');
     });
     ap.on('reg', (rawAPID) => {
-      const apid = JSON.parse(rawAPID);
-      db.queryAPID(apid)
-        .then((apInfo) => {
-          lin.info(`New AP registered: ${apid}`);
-          ap.on('neww', (data) => {
-            if (csi.isReady()) {
-              csi.processWindow(apInfo.aid, data);
-            } else {
-              lin.warn('CSI entered but processors are not ready. This will ignored.');
-            }
+      try {
+        const apid = JSON.parse(rawAPID);
+        db.queryAPID(apid)
+          .then((apInfo) => {
+            lin.info(`An AP registered: ${apid}`);
+            ap.on('neww', (data) => {
+              if (csi.isReady()) {
+                csi.processWindow(apInfo.aid, data);
+              } else {
+                lin.warn('CSI entered but processors are not ready. These CSIs are ignored.');
+              }
+            });
+            ap.emit('regResult', JSON.stringify('true'));
+          })
+          .catch(() => {
+            lin.warn(`New AP tried to register but failed: ${apid}`);
+            ap.emit('regResult', JSON.stringify('Failed to register your AP. Please restart the AP program to retry.'));
           });
-          ap.emit('regResult', JSON.stringify('true'));
-        })
-        .catch(() => {
-          lin.warn(`New AP tried to register but failed: ${apid}`);
-          ap.emit('regResult', JSON.stringify('Failed to register your AP. Please restart the AP program to retry.'));
-        });
+      } catch (e) {
+        lin.error('AP Registration Error!');
+        lin.debug(e);
+      }
     });
   });
 
@@ -72,36 +77,41 @@ export const route = (core, io, csi, db) => (new Promise((resolve) => {
       lout.info('A client disconnected.');
     });
     cli.on('reg', (rawCID) => {
-      const cid = JSON.parse(rawCID);
-      db.queryClientID(cid)
-        .then((cliInfo) => {
-          lout.info(`New client registered: ${cid}`);
-          for (let i = 0; i < cliInfo.aids.length; i += 1) {
-            if (liveClient[cliInfo.aids[i]]) {
-              liveClient[cliInfo.aids[i]][cid] = cli;
-            } else {
-              db.queryAreaID(cliInfo.aids[i]).then((area) => {
-                liveClient[cliInfo.aids[i]] = { name: area.name, cid: cli };
-              }).catch(() => {
-                core.log.error(`Failed to find an area: ${cliInfo.aids[i]}! Notification for this area may not work.`);
-              });
-            }
-          }
-          cli.on('disconnect', () => {
+      try {
+        const cid = JSON.parse(rawCID);
+        db.queryClientID(cid)
+          .then((cliInfo) => {
+            lout.info(`New client registered: ${cid}`);
             for (let i = 0; i < cliInfo.aids.length; i += 1) {
-              delete liveClient[cliInfo.aids[i]][cid];
+              if (liveClient[cliInfo.aids[i]]) {
+                liveClient[cliInfo.aids[i]][cid] = cli;
+              } else {
+                db.queryAreaID(cliInfo.aids[i]).then((area) => {
+                  liveClient[cliInfo.aids[i]] = { name: area.name, cid: cli };
+                }).catch(() => {
+                  core.log.error(`Failed to find an area: ${cliInfo.aids[i]}! Notification for this area may not work.`);
+                });
+              }
             }
+            cli.on('disconnect', () => {
+              for (let i = 0; i < cliInfo.aids.length; i += 1) {
+                delete liveClient[cliInfo.aids[i]][cid];
+              }
+            });
+            cli.emit('regResult', JSON.stringify({
+              name: cliInfo.name,
+              areaCount: cliInfo.area.length,
+              connected: 0,
+            }));
+          })
+          .catch(() => {
+            lout.info(`New client tried to register but failed: ${cid}`);
+            cli.emit('regResult', JSON.stringify('Failed to register your client. Please retry with correct client ID.'));
           });
-          cli.emit('regResult', JSON.stringify({
-            name: cliInfo.name,
-            areaCount: cliInfo.area.length,
-            connected: 0,
-          }));
-        })
-        .catch(() => {
-          lout.info(`New client tried to register but failed: ${cid}`);
-          cli.emit('regResult', JSON.stringify('Failed to register your client. Please retry with correct client ID.'));
-        });
+      } catch (e) {
+        lout.error('Client Registration Error!');
+        lout.debug(e);
+      }
     });
   });
 

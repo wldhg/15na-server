@@ -1,9 +1,12 @@
 % IRONA Server is subject to the terms of the Mozilla Public License 2.0.
 % You can obtain a copy of MPL at LICENSE.md of repository root.
 
-function ret = preprocess(
-    datPath, ppid, redRes, pps, procAmp, procPhase, colPerPair, tx, rx
-  )
+function ret = preprocess( ...
+    datPath, ppid, redRes64, pps64, procAmp, procPhase, colPerPair64, tx_str, rx_str )
+
+  redRes = double(redRes64);
+  pps = double(pps64);
+  colPerPair = double(colPerPair64);
 
   if (redRes ~= 1)
     raw_data = read_bf_file_partial(datPath, redRes);
@@ -16,6 +19,8 @@ function ret = preprocess(
 
   % Check Tx/Rx count -- Do this in here cuz Tx/Rx config can change from outside.
   % From here, use ltx|lrx instead raw_data{1}.Ntx|Nrx.
+  tx = arrayfun(@(s) str2double(s),split(tx_str, ',')');
+  rx = arrayfun(@(s) str2double(s),split(rx_str, ',')');
   if (raw_data{1}.Ntx < max(tx) || raw_data{1}.Nrx < max(rx))
     fprintf('>> [PREP - %s]   ~> Tx/Rx does not match. Stop these packets.\n', ppid, length(raw_data));
     return;
@@ -27,15 +32,21 @@ function ret = preprocess(
 
   % zeros(CSI data length, antenna, antenna, subcarriers (groupped by Intel 5300))
   ocsi = zeros(length(raw_data), raw_data{1}.Ntx, raw_data{1}.Nrx, 30);
-  csi = zeros(length(raw_data), ltx, lrx, 30);
   timestamp = zeros(length(raw_data), 1);
 
-  % Scaled into linear with selection tx/rx pairs -- Filter TR Pair in here
+  % Scaled into linear
   fprintf('>> [PREP - %s]   ~> Scaling into linear\n', ppid);
   for pidx = 1:length(raw_data)
     ocsi(pidx, :, :, :) = get_scaled_csi(raw_data{pidx});
     timestamp(pidx) = (raw_data{pidx}.timestamp_low - raw_data{1}.timestamp_low) * 1.0e-6;
   end
+
+  % Consider uniqueness
+  [timestamp, uni] = unique(timestamp);
+  ocsi = ocsi(uni, :, :, :);
+
+  % Select tx/rx pairs -- Filter TR Pair in here
+  csi = zeros(length(uni), ltx, lrx, 30);
   for txi = 1:ltx
     for rxi = 1:lrx
       csi(:, txi, rxi, :) = ocsi(:, tx(txi), rx(rxi), :);
@@ -53,12 +64,11 @@ function ret = preprocess(
     for t = 1:ltx
       for r = 1:lrx
         for ch = 1:30
-          csi_amp(t, r, ch, :) =
-            interp1(
-              timestamp,
-              hampel(ocsi_amp(t, r, ch, :), 6, 1.6),
-              interpolated_timestamp
-            );
+          csi_amp(t, r, ch, :) = ...
+            interp1(timestamp, hampel( ...
+                reshape(ocsi_amp(t, r, ch, :), [1, length(uni)]), ...
+                6, 1.6 ), ...
+              interpolated_timestamp );
         end
       end
     end
@@ -66,15 +76,16 @@ function ret = preprocess(
   if (procPhase)
     fprintf('>> [PREP - %s]   ~> Permuting phase\n', ppid);
     ocsi_phase = permute(angle(csi), [2 3 4 1]);
+    partial_phase = zeros(30, length(uni));
     csi_phase = zeros(ltx, lrx, 30, lpkt);
     fprintf('>> [PREP - %s]   ~> Calibrating phase\n', ppid);
     for k = 1:ltx
       for m = 1:lrx
-        for j = 1:length(raw_data)
-          csi_phase_calibrated(k, m, :, j) = phase_calibration(csi_phase(k, m, :, j));
+        for j = 1:length(uni)
+          partial_phase(:, j) = phase_calibration(ocsi_phase(k, m, :, j));
         end
         for ch = 1:30
-          csi_phase(k, m, ch, :) = interp1(timestamp, csi_phase_calibrated(k, m, ch, :), interpolated_timestamp);
+          csi_phase(k, m, ch, :) = interp1(timestamp, partial_phase(ch, :), interpolated_timestamp);
         end
       end
     end
@@ -92,28 +103,24 @@ function ret = preprocess(
       end
     elseif (ltx == 2)
       for pidx = 1:lpkt
-        ccAmp = horzcat(
-          reshape(squeeze(csi_amp(1, :, :, pidx))', [1, lrx30]),
-          reshape(squeeze(csi_amp(2, :, :, pidx))', [1, lrx30])
-        );
-        ccPhase = horzcat(
-          reshape(squeeze(csi_phase(1, :, :, pidx))', [1, lrx30]),
-          reshape(squeeze(csi_phase(2, :, :, pidx))', [1, lrx30])
-        );
+        ccAmp = horzcat( ...
+          reshape(squeeze(csi_amp(1, :, :, pidx))', [1, lrx30]), ...
+          reshape(squeeze(csi_amp(2, :, :, pidx))', [1, lrx30]) );
+        ccPhase = horzcat( ...
+          reshape(squeeze(csi_phase(1, :, :, pidx))', [1, lrx30]), ...
+          reshape(squeeze(csi_phase(2, :, :, pidx))', [1, lrx30]) );
         ret(pidx, :) = horzcat(ccAmp, ccPhase);
       end
     else
       for pidx = 1:lpkt
-        ccAmp = horzcat(
-          reshape(squeeze(csi_amp(1, :, :, pidx))', [1, lrx30]),
-          reshape(squeeze(csi_amp(2, :, :, pidx))', [1, lrx30]),
-          reshape(squeeze(csi_amp(3, :, :, pidx))', [1, lrx30])
-        );
-        ccPhase = horzcat(
-          reshape(squeeze(csi_phase(1, :, :, pidx))', [1, lrx30]),
-          reshape(squeeze(csi_phase(2, :, :, pidx))', [1, lrx30]),
-          reshape(squeeze(csi_phase(3, :, :, pidx))', [1, lrx30])
-        );
+        ccAmp = horzcat( ...
+          reshape(squeeze(csi_amp(1, :, :, pidx))', [1, lrx30]), ...
+          reshape(squeeze(csi_amp(2, :, :, pidx))', [1, lrx30]), ...
+          reshape(squeeze(csi_amp(3, :, :, pidx))', [1, lrx30]) );
+        ccPhase = horzcat( ...
+          reshape(squeeze(csi_phase(1, :, :, pidx))', [1, lrx30]), ...
+          reshape(squeeze(csi_phase(2, :, :, pidx))', [1, lrx30]), ...
+          reshape(squeeze(csi_phase(3, :, :, pidx))', [1, lrx30]) );
         ret(pidx, :) = horzcat(ccAmp, ccPhase);
       end
     end
@@ -124,18 +131,16 @@ function ret = preprocess(
       end
     elseif (ltx == 2)
       for pidx = 1:lpkt
-        ret(pidx, :) = horzcat(
-          reshape(squeeze(csi_amp(1, :, :, pidx))', [1, lrx30]),
-          reshape(squeeze(csi_amp(2, :, :, pidx))', [1, lrx30])
-        );
+        ret(pidx, :) = horzcat( ...
+          reshape(squeeze(csi_amp(1, :, :, pidx))', [1, lrx30]), ...
+          reshape(squeeze(csi_amp(2, :, :, pidx))', [1, lrx30]) );
       end
     else
       for pidx = 1:lpkt
-        ret(pidx, :) = horzcat(
-          reshape(squeeze(csi_amp(1, :, :, pidx))', [1, lrx30]),
-          reshape(squeeze(csi_amp(2, :, :, pidx))', [1, lrx30]),
-          reshape(squeeze(csi_amp(3, :, :, pidx))', [1, lrx30])
-        );
+        ret(pidx, :) = horzcat( ...
+          reshape(squeeze(csi_amp(1, :, :, pidx))', [1, lrx30]), ...
+          reshape(squeeze(csi_amp(2, :, :, pidx))', [1, lrx30]), ...
+          reshape(squeeze(csi_amp(3, :, :, pidx))', [1, lrx30]) );
       end
     end
   else
@@ -145,18 +150,16 @@ function ret = preprocess(
       end
     elseif (ltx == 2)
       for pidx = 1:lpkt
-        ret(pidx, :) = horzcat(
-          reshape(squeeze(csi_phase(1, :, :, pidx))', [1, lrx30]),
-          reshape(squeeze(csi_phase(2, :, :, pidx))', [1, lrx30])
-        );
+        ret(pidx, :) = horzcat( ...
+          reshape(squeeze(csi_phase(1, :, :, pidx))', [1, lrx30]), ...
+          reshape(squeeze(csi_phase(2, :, :, pidx))', [1, lrx30]) );
       end
     else
       for pidx = 1:lpkt
-        ret(pidx, :) = horzcat(
-          reshape(squeeze(csi_phase(1, :, :, pidx))', [1, lrx30]),
-          reshape(squeeze(csi_phase(2, :, :, pidx))', [1, lrx30]),
-          reshape(squeeze(csi_phase(3, :, :, pidx))', [1, lrx30])
-        );
+        ret(pidx, :) = horzcat( ...
+          reshape(squeeze(csi_phase(1, :, :, pidx))', [1, lrx30]), ...
+          reshape(squeeze(csi_phase(2, :, :, pidx))', [1, lrx30]), ...
+          reshape(squeeze(csi_phase(3, :, :, pidx))', [1, lrx30]) );
       end
     end
   end

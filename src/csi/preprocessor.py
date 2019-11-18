@@ -10,6 +10,7 @@ import threading as th
 import atexit
 import signal
 import os
+import json
 
 # Config MATLAB
 ml = meng.start_matlab()
@@ -32,7 +33,8 @@ ml.addpath('./src/csi/tools')
   CSI_RX_STR,
   CSI_PROCAMP_STR,
   CSI_PROCPHASE_STR,
-  CSI_PPS_STR
+  CSI_PPS_STR,
+  LEAVE_DAT_STR
 ] = sys.argv
 PP_ID = PP_ID_TEMPLATE.format(int(PP_ID_STR))
 PIPE_SOC = PIPE_TEMPLATE.format(int(PP_ID_STR))
@@ -41,14 +43,13 @@ CSI_WINSLIDEROW = int(CSI_WINSLIDEROW_STR)
 CSI_WINROW = int(CSI_WINROW_STR)
 CSI_WINCOL = int(CSI_WINCOL_STR)
 CSI_WINCOL_PER_PAIR = int(CSI_WINCOL_PER_PAIR_STR)
-CSI_TX = list(map(int, CSI_TX_STR.split(',')))
-CSI_RX = list(map(int, CSI_RX_STR.split(',')))
 CSI_PROCAMP = CSI_PROCAMP_STR == 'true'
 CSI_PROCPHASE = CSI_PROCPHASE_STR == 'true'
 CSI_PPS = int(CSI_PPS_STR)
+DEL_DAT = LEAVE_DAT_STR == 'false'
 
 # Set Print
-logPrefix = ">> [PREP - " + PP_ID + "]"
+logPrefix = "\033[0;35;40m>> [PREP - " + PP_ID + "]\033[0m"
 def log(*args):
   print(logPrefix, " ".join(tuple(map(str,args))))
 
@@ -74,14 +75,19 @@ with soc.socket(soc.AF_UNIX, soc.SOCK_STREAM) as node:
 
     def preprocess(pred, addr):
       global node
-      global PP_ID, CSI_REDUCE_RESOLUTION, CSI_WINSLIDEROW, CSI_WINROW, CSI_WINCOL, CSI_WINCOL_PER_PAIR, CSI_TX, CSI_RX
+      global PP_ID, CSI_REDUCE_RESOLUTION, CSI_WINSLIDEROW, CSI_WINROW, CSI_WINCOL, CSI_WINCOL_PER_PAIR, CSI_TX_STR, CSI_RX_STR
       log("Connected to Predictor! Wait for new data...")
       while True:
-        datPath = node.recv(256).decode('utf-8')
+        req = json.loads(node.recv(256).decode('utf-8'))
+        datPath = req["path"]
 
-        # Read Datfile,
+        # Read Datfile
         log("RAW Data received. Preprocessing...")
-        cat = np.asarray(ml.preprocess(datPath, PP_ID, CSI_REDUCE_RESOLUTION, CSI_PPS,  CSI_PROCAMP, CSI_PROCPHASE, CSI_WINCOL_PER_PAIR, CSI_TX, CSI_RX))
+        cat = np.asarray(ml.preprocess(datPath, PP_ID, CSI_REDUCE_RESOLUTION, CSI_PPS,  CSI_PROCAMP, CSI_PROCPHASE, CSI_WINCOL_PER_PAIR, CSI_TX_STR, CSI_RX_STR))
+
+        # Delete Datfile
+        if DEL_DAT:
+          os.remove(datPath)
 
         # Get Windows without timestamp
         log("Applying sliding window...")
@@ -96,7 +102,7 @@ with soc.socket(soc.AF_UNIX, soc.SOCK_STREAM) as node:
 
         # Get Scores
         log("Dumping windows to predictor...")
-        dumpedList = pickle.dumps(newList)
+        dumpedList = pickle.dumps(tuple((str(req["aid"]), newList)))
         log("Windows dumped.", "Length:", len(dumpedList))
         pred.sendall(dumpedList)
         pred.sendall("ｅｔｅｒｎｉｔｙ＿ＴａｋｅＭｙＨａｎｄ".encode("utf-8"))
@@ -106,8 +112,5 @@ with soc.socket(soc.AF_UNIX, soc.SOCK_STREAM) as node:
       try:
         acceptedPipe = pipe.accept()
         th.Thread(target=preprocess, args=acceptedPipe).start()
-      except OSError:
+      except:
         pass
-      except Exception as e:
-        if not stoppie:
-          raise e

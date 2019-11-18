@@ -18,7 +18,7 @@ import logging
 
 # Set Print
 def log(*args):
-  print(">> [PREDICTOR]", " ".join(tuple(map(str, args))))
+  print("\033[0;33;40m>> [PREDICTOR]\033[0m", " ".join(tuple(map(str, args))))
 
 # Constants
 [
@@ -77,20 +77,23 @@ model.predict(np.zeros([1, CSI_WINROW, CSI_WINCOL]))
 # Open IPC to Node
 waitListLock = th.Lock()
 waitList = np.empty([0, CSI_WINROW, CSI_WINCOL], float)
+waitAIDList = []
 PIPE_FORMFEED = "ｅｔｅｒｎｉｔｙ＿ＴａｋｅＭｙＨａｎｄ".encode("utf-8")
 with soc.socket(soc.AF_UNIX, soc.SOCK_STREAM) as node:
   node.connect(PRED_SOC)
   def predict():
-    global log, model, waitListLock, waitList, node
+    global log, model, waitListLock, waitList, node, waitAIDList
     global CSI_WINROW, CSI_WINCOL
     if len(waitList) > 0:
       log("Predicting now...")
       waitListLock.acquire()
       predList = waitList.copy()
+      predAIDList = waitAIDList.copy()
       waitList = np.empty([0, CSI_WINROW, CSI_WINCOL], float)
+      waitAIDList = []
       waitListLock.release()
       scores = model.predict(predList)
-      node.send((json.dumps(scores.tolist()) + '\f').encode())
+      node.send((json.dumps([scores.tolist(), predAIDList]) + '\f').encode())
     else:
       log("No pending windows.")
 
@@ -111,7 +114,7 @@ with soc.socket(soc.AF_UNIX, soc.SOCK_STREAM) as node:
       self.stop()
 
   def acceptWindow(i):
-    global waitListLock, waitList, log
+    global waitListLock, waitList, log, waitAIDList
     global PIPE_BUFSIZE, PIPE_TEMPLATE, PIPE_FORMFEED
     PIPE_SOC = PIPE_TEMPLATE.format(i)
     with soc.socket(soc.AF_UNIX, soc.SOCK_STREAM) as prep:
@@ -120,16 +123,17 @@ with soc.socket(soc.AF_UNIX, soc.SOCK_STREAM) as node:
       while True:
         waitListBytes = b""
         while True:
-          waitListBytes += prep.recv(32768)
+          waitListBytes += prep.recv(65536)
           if waitListBytes[-57:] == PIPE_FORMFEED:
             waitListBytes = waitListBytes[:-57]
             break
         log("PIPE Data received.", "Length:", len(waitListBytes), "bytes")
         try:
-          newList = pickle.loads(waitListBytes)
+          (aid, newList) = pickle.loads(waitListBytes)
           log("NP array loaded from PIPE data.")
           waitListLock.acquire()
           waitList = np.concatenate((waitList, newList), axis=0)
+          waitAIDList = waitAIDList + ([aid] * len(newList))
           waitListLock.release()
         except pickle.UnpicklingError:
           log("Unpickling error occured. Packets discarded!")

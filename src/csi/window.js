@@ -18,7 +18,7 @@ export const init = (core, ipc, launchCode) => {
     } else {
       windowCount += 1;
     }
-    return `${os.tmpdir()}/15na-${launchCode}-${windowCount}.dat`;
+    return `${os.tmpdir()}/irona-pkts-${launchCode}-${windowCount}.dat`;
   };
   winLog = core.log;
   prepServer = ipc.prep.server;

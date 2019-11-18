@@ -13,7 +13,7 @@ let target;
 let targetCond;
 let targetRept;
 let targetHistoryMax;
-const targetHistory = [];
+const targetHistory = {};
 
 let predCount = 0;
 
@@ -57,7 +57,7 @@ export const init = (core, conf) => {
 };
 
 export const fromBuffer = (buf) => {
-  const { data, aid } = JSON.parse(buf.toString().slice(0, -1)); // Remove Form Feed
+  const [data, aid] = JSON.parse(buf.toString().slice(0, -1)); // Remove Form Feed
 
   predLog(`Detection [ ${labelString} ] (${predCount += 1})`);
 
@@ -77,28 +77,31 @@ export const fromBuffer = (buf) => {
           approx = j;
         }
       }
-      predLog(`Detection[ ${analysis.join('  ')} ] → ${labels[approx]} (${approxProb >= targetCond ? '✔' : '❌'})`);
+      predLog(`Detection [ ${analysis.join('  ')} ] → ${labels[approx]} (${approxProb >= targetCond ? '✔' : '❌'})`);
     }
 
     // Process fall
     const fallProb = Number(d[target]);
     if (fallProb > 0.9999) {
-      alert(aid, fallProb);
+      alert(aid[i], fallProb);
     } else {
-      targetHistory.push(fallProb);
-      if (targetHistory.length > targetHistoryMax) {
-        targetHistory.splice(0, 1);
+      if (!targetHistory[aid[i]]) {
+        targetHistory[aid[i]] = [];
+      }
+      targetHistory[aid[i]].push(fallProb);
+      if (targetHistory[aid[i]].length > targetHistoryMax) {
+        targetHistory[aid[i]].splice(0, 1);
       }
       if (fallProb >= targetCond) {
         let history = 0;
         let historySum = 0;
-        for (let j = 0; j < targetHistory.length; j += 1) {
-          if (targetHistory[j] >= targetCond) {
-            historySum += targetHistory[j];
+        for (let j = 0; j < targetHistory[aid[i]].length; j += 1) {
+          if (targetHistory[aid[i]][j] >= targetCond) {
+            historySum += targetHistory[aid[i]][j];
             history += 1;
           }
         }
-        if (history > targetRept) alert(aid, historySum / history);
+        if (history > targetRept) alert(aid[i], historySum / history);
       }
     }
   }
