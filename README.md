@@ -14,7 +14,7 @@ If fall is detected, this make alert at `15na-cli`.
 - **MATLAB** R2015b+ <a href="#why-matlab"><sup>Really?</sup></a>
 - **Python** 3.6+\
   dependency list in `requirements.txt`.
-    - `keras` or `keras-gpu` with `tensorflow` backend
+    - `tensorflow`
     - `numpy`
     - `matlab.engine`
 - **Node.js** 12+\

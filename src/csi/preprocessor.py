@@ -11,6 +11,7 @@ import atexit
 import signal
 import os
 import json
+import gzip
 
 # Config MATLAB
 ml = meng.start_matlab()
@@ -49,7 +50,7 @@ CSI_PPS = int(CSI_PPS_STR)
 DEL_DAT = LEAVE_DAT_STR == 'false'
 
 # Set Print
-logPrefix = "\033[0;35;40m>> [PREP - " + PP_ID + "]\033[0m"
+logPrefix = "\033[0;35m>> [PREP - " + PP_ID + "]\033[0m"
 def log(*args):
   print(logPrefix, " ".join(tuple(map(str,args))))
 
@@ -104,7 +105,7 @@ with soc.socket(soc.AF_UNIX, soc.SOCK_STREAM) as node:
         log("Dumping windows to predictor...")
         dumpedList = pickle.dumps(tuple((str(req["aid"]), newList)))
         log("Windows dumped.", "Length:", len(dumpedList))
-        pred.sendall(dumpedList)
+        pred.sendall(gzip.compress(dumpedList))
         pred.sendall("ｅｔｅｒｎｉｔｙ＿ＴａｋｅＭｙＨａｎｄ".encode("utf-8"))
         log("Windows sent. Wait for new data...")
 

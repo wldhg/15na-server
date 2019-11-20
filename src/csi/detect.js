@@ -57,53 +57,57 @@ export const init = (core, conf) => {
 };
 
 export const fromBuffer = (buf) => {
-  const [data, aid] = JSON.parse(buf.toString().slice(0, -1)); // Remove Form Feed
+  try {
+    const [data, aid] = JSON.parse(buf.toString().slice(0, -1)); // Remove Form Feed
 
-  predLog(`Detection [ ${labelString} ] (${predCount += 1})`);
+    predLog(`Detection [ ${labelString} ] (${predCount += 1})`);
 
-  for (let i = 0; i < data.length; i += 1) {
-    const d = data[i];
+    for (let i = 0; i < data.length; i += 1) {
+      const d = data[i];
 
-    // Process logging
-    if (isPredLogEnabled) {
-      const analysis = [];
-      let approx;
-      let approxProb;
-      for (let j = 0; j < d.length; j += 1) {
-        const numProb = Number(d[j]);
-        analysis.push(numProb.toFixed(labelMaxLen));
-        if (numProb > approxProb) {
-          approxProb = numProb;
-          approx = j;
-        }
-      }
-      predLog(`Detection [ ${analysis.join('  ')} ] → ${labels[approx]} (${approxProb >= targetCond ? '✔' : '❌'})`);
-    }
-
-    // Process fall
-    const fallProb = Number(d[target]);
-    if (fallProb > 0.9999) {
-      alert(aid[i], fallProb);
-    } else {
-      if (!targetHistory[aid[i]]) {
-        targetHistory[aid[i]] = [];
-      }
-      targetHistory[aid[i]].push(fallProb);
-      if (targetHistory[aid[i]].length > targetHistoryMax) {
-        targetHistory[aid[i]].splice(0, 1);
-      }
-      if (fallProb >= targetCond) {
-        let history = 0;
-        let historySum = 0;
-        for (let j = 0; j < targetHistory[aid[i]].length; j += 1) {
-          if (targetHistory[aid[i]][j] >= targetCond) {
-            historySum += targetHistory[aid[i]][j];
-            history += 1;
+      // Process logging
+      if (isPredLogEnabled) {
+        const analysis = [];
+        let approx;
+        let approxProb;
+        for (let j = 0; j < d.length; j += 1) {
+          const numProb = Number(d[j]);
+          analysis.push(numProb.toFixed(labelMaxLen));
+          if (numProb > approxProb) {
+            approxProb = numProb;
+            approx = j;
           }
         }
-        if (history > targetRept) alert(aid[i], historySum / history);
+        predLog(`Detection [ ${analysis.join('  ')} ] → ${labels[approx]} (${approxProb >= targetCond ? '✔' : '❌'})`);
+      }
+
+      // Process fall
+      const fallProb = Number(d[target]);
+      if (fallProb > 0.9999) {
+        alert(aid[i], fallProb);
+      } else {
+        if (!targetHistory[aid[i]]) {
+          targetHistory[aid[i]] = [];
+        }
+        targetHistory[aid[i]].push(fallProb);
+        if (targetHistory[aid[i]].length > targetHistoryMax) {
+          targetHistory[aid[i]].splice(0, 1);
+        }
+        if (fallProb >= targetCond) {
+          let history = 0;
+          let historySum = 0;
+          for (let j = 0; j < targetHistory[aid[i]].length; j += 1) {
+            if (targetHistory[aid[i]][j] >= targetCond) {
+              historySum += targetHistory[aid[i]][j];
+              history += 1;
+            }
+          }
+          if (history > targetRept) alert(aid[i], historySum / history);
+        }
       }
     }
+  } catch (e) {
+    predLog('Wrong data input! throw this.');
   }
 };
 

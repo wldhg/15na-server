@@ -22,12 +22,8 @@ export const parse = (launchCode, arg) => {
 
   data.csiTxAntenna = arg.txAntenna ? arg.txAntenna.split(',') : ['1'];
   data.csiRxAntenna = arg.rxAntenna ? arg.rxAntenna.split(',') : ['1'];
-  data.csiWindowRow = Math.floor(
-    arg.windowLength * (arg.packetsPerSecond / data.csiRedResolution),
-  );
-  data.csiSlideRow = Math.floor(
-    arg.windowInterval * (arg.packetsPerSecond / data.csiRedResolution),
-  );
+  data.csiWindowRow = Math.floor(arg.windowLength * arg.packetsPerSecond);
+  data.csiSlideRow = Math.floor(arg.windowInterval * arg.packetsPerSecond);
   data.csiPPS = arg.packetsPerSecond;
 
   data.pipeBufferSize = arg.pipeBufferSize || 30;

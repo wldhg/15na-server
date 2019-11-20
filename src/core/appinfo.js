@@ -197,13 +197,13 @@ export const arg = {
       required: false,
     },
     disableAmplitude: {
-      flags: ['-namp', '--disable-amplitude'],
+      flags: ['-noamp', '--disable-amplitude'],
       type: 'flag',
       description: 'Disable processing amplitude. This does not change CSI column shape.',
       required: false,
     },
     disablePhase: {
-      flags: ['-nphase', '--disable-phase'],
+      flags: ['-nophase', '--disable-phase'],
       type: 'flag',
       description: 'Disable processing phase. This does not change CSI phase shape.',
       required: false,

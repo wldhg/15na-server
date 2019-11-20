@@ -22,7 +22,7 @@ function ret = preprocess( ...
   tx = arrayfun(@(s) str2double(s),split(tx_str, ',')');
   rx = arrayfun(@(s) str2double(s),split(rx_str, ',')');
   if (raw_data{1}.Ntx < max(tx) || raw_data{1}.Nrx < max(rx))
-    fprintf('>> [PREP - %s]   ~> Tx/Rx does not match. Stop these packets.\n', ppid, length(raw_data));
+    fprintf('>> [PREP - %s]   ~> Tx/Rx does not match. Stop these packets.\n', ppid);
     return;
   end
   ltx = length(tx);
@@ -143,7 +143,7 @@ function ret = preprocess( ...
           reshape(squeeze(csi_amp(3, :, :, pidx))', [1, lrx30]) );
       end
     end
-  else
+  elseif (procPhase)
     if (ltx == 1)
       for pidx = 1:lpkt
         ret(pidx, :) = reshape(squeeze(csi_phase(1, :, :, pidx))', [1, lrx30]);
