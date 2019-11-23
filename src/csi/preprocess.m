@@ -36,9 +36,18 @@ function ret = preprocess( ...
 
   % Scaled into linear
   fprintf('>> [PREP - %s]   ~> Scaling into linear\n', ppid);
-  for pidx = 1:length(raw_data)
-    ocsi(pidx, :, :, :) = get_scaled_csi(raw_data{pidx});
-    timestamp(pidx) = (raw_data{pidx}.timestamp_low - raw_data{1}.timestamp_low) * 1.0e-6;
+  ocsi(1,:,:,:) = get_scaled_csi(raw_data{1});
+  zero_timestamp = raw_data{1}.timestamp_low;
+  addi_timestamp = 0;
+  timestamp(1) = 0;
+  for pidx = 2:length(raw_data)
+    ocsi(pidx,:,:,:) = get_scaled_csi(raw_data{pidx});
+    if raw_data{pidx}.timestamp_low < raw_data{pidx - 1}.timestamp_low
+      % Timestamp Reset
+      addi_timestamp = addi_timestamp + raw_data{pidx - 1} - zero_timestamp;
+      zero_timestamp = 0;
+    end
+    timestamp(pidx) = (raw_data{pidx}.timestamp_low - zero_timestamp + addi_timestamp) * 1.0e-6;
   end
 
   % Consider uniqueness

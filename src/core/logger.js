@@ -11,7 +11,7 @@ import colors from 'colors';
 import mkdir from '../util/mkdir.js';
 
 /**
- * Waai logger includes fsout and stdout.
+ * The logger includes fsout and stdout.
  */
 class Logger {
   /**
