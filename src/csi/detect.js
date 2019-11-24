@@ -9,7 +9,7 @@ let labels;
 let labelMaxLen;
 let labelString = '';
 
-let target;
+let targets;
 let targetCond;
 let targetRept;
 let targetHistoryMax;
@@ -50,10 +50,22 @@ export const init = (core, conf) => {
   }
 
   // Save notification threshold
-  target = core.arg.notifID;
+  targets = core.arg.notifID.split(',');
   targetCond = core.arg.notifProbCond;
   targetRept = core.arg.notifRepeatCond;
   targetHistoryMax = conf.predRemainingWindow;
+
+  const newTargets = [];
+  for (let i = 0; i < targets.length; i += 1) {
+    targets[i] = Number(targets[i]);
+    if (Number.isNaN(targets[i])) {
+      core.log.warn(`Invalid target ID(s): ${core.arg.notifID}`);
+    } else {
+      newTargets.push(targets[i]);
+      targetHistory[targets[i]] = {};
+    }
+  }
+  targets = newTargets;
 };
 
 export const fromBuffer = (buf) => {
@@ -82,27 +94,30 @@ export const fromBuffer = (buf) => {
       }
 
       // Process fall
-      const fallProb = Number(d[target]);
-      if (fallProb > 0.9999) {
-        alert(aid[i], fallProb);
-      } else {
-        if (!targetHistory[aid[i]]) {
-          targetHistory[aid[i]] = [];
-        }
-        targetHistory[aid[i]].push(fallProb);
-        if (targetHistory[aid[i]].length > targetHistoryMax) {
-          targetHistory[aid[i]].splice(0, 1);
-        }
-        if (fallProb >= targetCond) {
-          let history = 0;
-          let historySum = 0;
-          for (let j = 0; j < targetHistory[aid[i]].length; j += 1) {
-            if (targetHistory[aid[i]][j] >= targetCond) {
-              historySum += targetHistory[aid[i]][j];
-              history += 1;
-            }
+      for (let j = 0; j < targets.length; j += 1) {
+        const target = targets[j];
+        const fallProb = Number(d[target]);
+        if (fallProb > 0.9999) {
+          alert(aid[i], fallProb);
+        } else {
+          if (!targetHistory[target][aid[i]]) {
+            targetHistory[target][aid[i]] = [];
           }
-          if (history > targetRept) alert(aid[i], historySum / history);
+          targetHistory[target][aid[i]].push(fallProb);
+          if (targetHistory[target][aid[i]].length > targetHistoryMax) {
+            targetHistory[target][aid[i]].splice(0, 1);
+          }
+          if (fallProb >= targetCond) {
+            let history = 0;
+            let historySum = 0;
+            for (let k = 0; k < targetHistory[target][aid[i]].length; k += 1) {
+              if (targetHistory[target][aid[i]][k] >= targetCond) {
+                historySum += targetHistory[target][aid[i]][k];
+                history += 1;
+              }
+            }
+            if (history > targetRept) alert(aid[i], historySum / history);
+          }
         }
       }
     }

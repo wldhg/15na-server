@@ -270,8 +270,8 @@ export const arg = {
     },
     notifID: {
       flags: ['-noti-id', '--notification-target-id'],
-      type: 'number',
-      description: 'If probability of [NOTIF ID] from prediction result goes over [NOTIF COND], notification will be sent (Caution: this > 0)',
+      type: 'string',
+      description: 'If probability of [NOTIF ID] from prediction result goes over [NOTIF COND], notification will be sent (Caution: this > 0) (e.g. 1,2)',
       required: true,
     },
   },

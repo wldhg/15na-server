@@ -83,8 +83,16 @@ typings/
 # DynamoDB Local files
 .dynamodb/
 
-# 15na non-codes
+# 15na models
 model/
+models/
+model.json
+model.yml
+model.yaml
+model.h5
+model.hdf5
+
+# 15na dev
 data/
 certs/
 ipynb/

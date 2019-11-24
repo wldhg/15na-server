@@ -338,18 +338,20 @@ export const parse = (config, command) => {
     });
 
     // Check whether if is not finished
-    if (dataRequired > 0) {
-      reject(
-        err.make(`Argument is lacked. ${dataName} requires ${dataRequiredOriginal} values but ${dataRequiredOriginal - dataRequired} values were entered.`),
-      );
-    } else if (requiredOptionsNames.length > 0) {
-      const requiredFlags = [];
-      requiredOptions.forEach((opt) => {
-        requiredFlags.push(opt.flags);
-      });
-      reject(
-        err.make('Following options were required, but not entered.', requiredFlags),
-      );
+    if (analyzed.help !== true) {
+      if (dataRequired > 0) {
+        reject(
+          err.make(`Argument is lacked. ${dataName} requires ${dataRequiredOriginal} values but ${dataRequiredOriginal - dataRequired} values were entered.`),
+        );
+      } else if (requiredOptionsNames.length > 0) {
+        const requiredFlags = [];
+        requiredOptions.forEach((opt) => {
+          requiredFlags.push(opt.flags);
+        });
+        reject(
+          err.make('Following options were required, but not entered.', requiredFlags),
+        );
+      }
     }
 
     return resolve(analyzed);

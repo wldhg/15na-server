@@ -61,6 +61,8 @@ modelName = MODEL_DIR + "/model.h5"
 modelProp = MODEL_DIR + "/model.yml"
 if not os.path.isfile(modelProp):
   modelProp = MODEL_DIR + "/model.json"
+if not os.path.isfile(modelName):
+  modelName = MODEL_DIR + "/model.hdf5"
 
 # Use MultiWorkerMirroredStrategy
 strategy = tf.distribute.MirroredStrategy()
