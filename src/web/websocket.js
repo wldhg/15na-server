@@ -24,6 +24,7 @@ lout.debug = outLogInstance.debug;
 lout.warn = outLogInstance.warn;
 lout.okay = outLogInstance.okay;
 
+const liveAP = {};
 const liveClient = {};
 const alertLog = [];
 
@@ -49,6 +50,32 @@ export const route = (core, io, csi, db) => (new Promise((resolve) => {
         const apid = JSON.parse(rawAPID);
         db.queryAPID(apid)
           .then((apInfo) => {
+            if (liveAP[apInfo.aid]) {
+              if (liveAP[apInfo.aid].indexOf(apid) === -1) {
+                liveAP[apInfo.aid].push(apid);
+              } else {
+                lin.warn(`Already an AP with apid: ${apid}`);
+              }
+            } else {
+              liveAP[apInfo.aid] = [apid];
+            }
+            ap.on('disconnect', () => {
+              if (liveAP[apInfo.aid]) {
+                if (liveClient[apInfo.aid]) {
+                  const cliKeys = Object.keys(liveClient[apInfo.aid]);
+                  for (let i = 0; i < cliKeys.length; i += 1) {
+                    if (cliKeys[i] !== 'name') {
+                      liveClient[apInfo.aid][cliKeys[i]].emit('updateAPCount', JSON.stringify(-1));
+                    }
+                  }
+                }
+                liveAP[apInfo.aid].splice(
+                  liveAP[apInfo.aid].indexOf(apid), 1,
+                );
+              } else {
+                lin.warn(`An AP array does not exist: ${apid}`);
+              }
+            });
             lin.info(`An AP registered: ${apid}`);
             ap.on('neww', (data) => {
               if (csi.isReady()) {
@@ -58,6 +85,14 @@ export const route = (core, io, csi, db) => (new Promise((resolve) => {
               }
             });
             ap.emit('regResult', JSON.stringify('true'));
+            if (liveClient[apInfo.aid]) {
+              const cliKeys = Object.keys(liveClient[apInfo.aid]);
+              for (let i = 0; i < cliKeys.length; i += 1) {
+                if (cliKeys[i] !== 'name') {
+                  liveClient[apInfo.aid][cliKeys[i]].emit('updateAPCount', JSON.stringify(1));
+                }
+              }
+            }
           })
           .catch(() => {
             lin.warn(`New AP tried to register but failed: ${apid}`);
@@ -82,12 +117,17 @@ export const route = (core, io, csi, db) => (new Promise((resolve) => {
         db.queryClientID(cid)
           .then((cliInfo) => {
             lout.info(`New client registered: ${cid}`);
+            let liveAPs = 0;
             for (let i = 0; i < cliInfo.aids.length; i += 1) {
+              if (liveAP[cliInfo.aids[i]]) {
+                liveAPs += liveAP[cliInfo.aids[i]].length;
+              }
               if (liveClient[cliInfo.aids[i]]) {
                 liveClient[cliInfo.aids[i]][cid] = cli;
               } else {
                 db.queryAreaID(cliInfo.aids[i]).then((area) => {
-                  liveClient[cliInfo.aids[i]] = { name: area.name, cid: cli };
+                  liveClient[cliInfo.aids[i]] = { name: area.name };
+                  liveClient[cliInfo.aids[i]][cid] = cli;
                 }).catch(() => {
                   core.log.error(`Failed to find an area: ${cliInfo.aids[i]}! Notification for this area may not work.`);
                 });
@@ -100,8 +140,8 @@ export const route = (core, io, csi, db) => (new Promise((resolve) => {
             });
             cli.emit('regResult', JSON.stringify({
               name: cliInfo.name,
-              areaCount: cliInfo.area.length,
-              connected: 0,
+              areaCount: cliInfo.aids.length,
+              connected: liveAPs,
             }));
           })
           .catch(() => {
