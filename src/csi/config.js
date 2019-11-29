@@ -28,7 +28,7 @@ export const parse = (launchCode, arg) => {
 
   data.pipeBufferSize = arg.pipeBufferSize || 30;
   data.predInterval = arg.predictionInterval || 8;
-  data.predRemainingWindow = 0;
+  data.predRemainingWindow = arg.notifHistorySize || 15;
 
   data.gpu = arg.gpuNumber && arg.gpuNumber.length > 0 ? arg.gpuNumber : 'unset';
 

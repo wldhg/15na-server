@@ -1,13 +1,37 @@
 /* IRONA Server is subject to the terms of the Mozilla Public License 2.0.
  * You can obtain a copy of MPL at LICENSE.md of repository root. */
 
-let notiLog;
+import * as color from 'colors';
+
 let predLog;
 let isPredLogEnabled;
 
 let labels;
-let labelMaxLen;
+let labelMaxLen = 0;
 let labelString = '';
+const labelColoring = [
+  'gray', /* 0.00 <= x < 0.05 */
+  'gray', /* 0.05 <= x < 0.10 */
+  'gray', /* 0.10 <= x < 0.15 */
+  'gray', /* 0.15 <= x < 0.20 */
+  'gray', /* 0.20 <= x < 0.25 */
+  'gray', /* 0.25 <= x < 0.30 */
+  'reset', /* 0.30 <= x < 0.35 */
+  'reset', /* 0.35 <= x < 0.40 */
+  'reset', /* 0.40 <= x < 0.45 */
+  'reset', /* 0.45 <= x < 0.50 */
+  'blue', /* 0.50 <= x < 0.55 */
+  'blue', /* 0.55 <= x < 0.60 */
+  'blue', /* 0.60 <= x < 0.65 */
+  'brightBlue', /* 0.65 <= x < 0.70 */
+  'brightBlue', /* 0.70 <= x < 0.75 */
+  'green', /* 0.75 <= x < 0.80 */
+  'green', /* 0.80 <= x < 0.85 */
+  'brightGreen', /* 0.85 <= x < 0.90 */
+  'brightYellow', /* 0.90 <= x < 0.95 */
+  'brightRed', /* 0.95 <= x < 1.00 */
+  'bgBrightRed', /* x == 1.00 */
+];
 
 let targets;
 let targetCond;
@@ -21,10 +45,9 @@ let alert;
 
 export const init = (core, conf) => {
   // Set logger
-  notiLog = core.log.okay;
   if (core.arg.dispPredResults) {
     predLog = (data) => {
-      core.log(data, 'Statics');
+      core.log(data, 'stat');
     };
     isPredLogEnabled = true;
   } else {
@@ -72,7 +95,7 @@ export const fromBuffer = (buf) => {
   try {
     const [data, aid] = JSON.parse(buf.toString().slice(0, -1)); // Remove Form Feed
 
-    predLog(`Detection [ ${labelString} ] (${predCount += 1})`);
+    predLog(`${`[  ${labelString}  ]`.bold}     ${`Pred No. ${predCount += 1}`.grey}`);
 
     for (let i = 0; i < data.length; i += 1) {
       const d = data[i];
@@ -81,16 +104,20 @@ export const fromBuffer = (buf) => {
       if (isPredLogEnabled) {
         const analysis = [];
         let approx;
-        let approxProb;
+        let approxProb = 0;
         for (let j = 0; j < d.length; j += 1) {
           const numProb = Number(d[j]);
-          analysis.push(numProb.toFixed(labelMaxLen));
+          analysis.push(
+            color.default[
+              labelColoring[Math.floor(numProb * 20)]
+            ](numProb.toFixed(labelMaxLen - 2)),
+          );
           if (numProb > approxProb) {
             approxProb = numProb;
             approx = j;
           }
         }
-        predLog(`Detection [ ${analysis.join('  ')} ] → ${labels[approx]} (${approxProb >= targetCond ? '✔' : '❌'})`);
+        predLog(`   ${analysis.join('  ')}     →  ${labels[approx]} (${approxProb >= targetCond ? ' ✔' : '❌ '})`);
       }
 
       // Process fall
@@ -127,8 +154,5 @@ export const fromBuffer = (buf) => {
 };
 
 export const setAlerter = (fn) => {
-  alert = (prob) => {
-    notiLog('😶 FALL DETECTED!');
-    fn(prob);
-  };
+  alert = fn;
 };

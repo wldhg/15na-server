@@ -71,9 +71,6 @@ export const load = (core) => {
   if (core.arg.dispPredOutput) {
     core.log.warn('The output of predictors will be printed through standard output. This can downgrade the performance.');
   }
-  if (core.arg.dispPredResults) {
-    core.log.warn('The prediction result may be printed through standard output. This can downgrade the performance.');
-  }
 
   ipc.pred.server.on('start', () => {
     const py = spawn('python', [

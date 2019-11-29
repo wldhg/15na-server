@@ -35,7 +35,7 @@ export const arg = {
         'modelDir', 'gpuNumber', 'preprocessingServerCount', 'predictionInterval', 'pipeBufferSize',
         'windowLength', 'windowInterval', 'packetsPerSecond', 'txAntenna', 'rxAntenna', 'disableAmplitude', 'disablePhase', 'reduceResolution', 'leavePackets',
         'dispInterpretedConfig', 'dispPredResults', 'dispPredOutput', 'dispPrepOutput', 'modeledLabels',
-        'notifProbCond', 'notifRepeatCond', 'notifID',
+        'notifProbCond', 'notifRepeatCond', 'notifID', 'notifHistorySize', 'notifMinInterval',
 
       ],
     },
@@ -273,6 +273,18 @@ export const arg = {
       type: 'string',
       description: 'If probability of [NOTIF ID] from prediction result goes over [NOTIF COND], notification will be sent (Caution: this > 0) (e.g. 1,2)',
       required: true,
+    },
+    notifHistorySize: {
+      flags: ['-noti-hs', '--notification-history-size'],
+      type: 'number',
+      description: 'Notifiaction repeatness history buffer size (Default: 15)',
+      required: false,
+    },
+    notifMinInterval: {
+      flags: ['-noti-ct', '--notification-cooltime'],
+      type: 'number',
+      description: 'Minimum interval between notifications in an area (in seconds) (Default: 10)',
+      required: false,
     },
   },
 };

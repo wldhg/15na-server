@@ -2,6 +2,7 @@
  * You can obtain a copy of MPL at LICENSE.md of repository root. */
 
 /* eslint-disable import/extensions */
+import 'colors';
 import Log from '../core/logger.js';
 
 const inLogInstance = new Log();
@@ -162,17 +163,19 @@ export const route = (core, io, csi, db) => (new Promise((resolve) => {
       alertLog.push(aid);
       setTimeout(() => {
         alertLog.splice(alertLog.indexOf(aid), 1);
-      }, 10000);
+        core.log.debug('Alert cooltime done.');
+      }, core.arg.notifMinInterval ? (core.arg.notifMinInterval * 1000) : 10000);
       if (liveClient[aid]) {
         const clis = Object.values(liveClient[aid]);
         for (let i = 0; i < clis.length; i += 1) {
-          clis[i].emit('alert', JSON.stringify({ loc: liveClient[aid].name, prob }));
+          if (typeof clis[i] !== 'string') {
+            clis[i].emit('alert', JSON.stringify({ loc: liveClient[aid].name, prob }));
+          }
         }
+        core.log(`${'⚠ FALL ALERT! ⚠'.underline.bold.bgYellow.black}  [${aid}, ${Number(prob).toFixed(7)}] ${`to ${clis.length - 1} client(s)`.grey}`);
       } else {
         core.log.warn(`No clients connected to area "${aid}"!!`);
       }
-    } else {
-      core.log('Fall alert requested but it\'s in cooltime.');
     }
   });
 });
