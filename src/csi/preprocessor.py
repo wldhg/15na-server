@@ -35,7 +35,9 @@ ml.addpath('./src/csi/tools')
   CSI_PROCAMP_STR,
   CSI_PROCPHASE_STR,
   CSI_PPS_STR,
-  LEAVE_DAT_STR
+  CSI_DEBUG_STR,
+  CSI_DEBUG_SKIP_STR,
+  LEAVE_DAT_STR,
 ] = sys.argv
 PP_ID = PP_ID_TEMPLATE.format(int(PP_ID_STR))
 PIPE_SOC = PIPE_TEMPLATE.format(int(PP_ID_STR))
@@ -47,6 +49,8 @@ CSI_WINCOL_PER_PAIR = int(CSI_WINCOL_PER_PAIR_STR)
 CSI_PROCAMP = CSI_PROCAMP_STR == 'true'
 CSI_PROCPHASE = CSI_PROCPHASE_STR == 'true'
 CSI_PPS = int(CSI_PPS_STR)
+CSI_DEBUG = CSI_DEBUG_STR == 'true'
+CSI_DEBUG_SKIP = int(CSI_DEBUG_SKIP_STR)
 DEL_DAT = LEAVE_DAT_STR == 'false'
 
 # Set Print
@@ -74,8 +78,16 @@ with soc.socket(soc.AF_UNIX, soc.SOCK_STREAM) as node:
     signal.signal(signal.SIGINT, closePipe)
     signal.signal(signal.SIGTERM, closePipe)
 
+    def debugCallback(aid, cbPath, cnt, pped):
+      global node
+      json.dump(pped.tolist(), open(cbPath, 'w'))
+      node.sendall(str(
+        json.dumps(tuple((str(aid), str(cbPath), str(cnt))))
+      ).encode())
+
     def preprocess(pred, addr):
       global node
+      global debugCallback
       global PP_ID, CSI_REDUCE_RESOLUTION, CSI_WINSLIDEROW, CSI_WINROW, CSI_WINCOL, CSI_WINCOL_PER_PAIR, CSI_TX_STR, CSI_RX_STR
       log("Connected to Predictor! Wait for new data...")
       while True:
@@ -84,7 +96,19 @@ with soc.socket(soc.AF_UNIX, soc.SOCK_STREAM) as node:
 
         # Read Datfile
         log("RAW Data received. Preprocessing...")
-        cat = np.asarray(ml.preprocess(datPath, PP_ID, CSI_REDUCE_RESOLUTION, CSI_PPS,  CSI_PROCAMP, CSI_PROCPHASE, CSI_WINCOL_PER_PAIR, CSI_TX_STR, CSI_RX_STR))
+        cat = np.asarray(
+          ml.preprocess(datPath, PP_ID, CSI_REDUCE_RESOLUTION, CSI_PPS, CSI_PROCAMP, CSI_PROCPHASE, CSI_WINCOL_PER_PAIR, CSI_TX_STR, CSI_RX_STR)
+        )
+
+        # If debug enabled, send it to node
+        if CSI_DEBUG:
+          th.Thread(
+            target=debugCallback,
+            args=(
+              req["aid"], req["cbPath"], req["cnt"],
+              cat[0:(cat.shape[0] - CSI_WINROW + CSI_WINSLIDEROW):CSI_DEBUG_SKIP, :]
+            )
+          ).start()
 
         # Delete Datfile
         if DEL_DAT:

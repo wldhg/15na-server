@@ -117,7 +117,17 @@ export const route = (core, io, csi, db) => (new Promise((resolve) => {
         const cid = JSON.parse(rawCID);
         db.queryClientID(cid)
           .then((cliInfo) => {
+            // Check management area
+            if (cliInfo.aids.length < 1) {
+              cli.emit('regResult', JSON.stringify(
+                'This client ID does not have any managable area.',
+              ));
+              return;
+            }
+
             lout.info(`New client registered: ${cid}`);
+
+            // Actual registration
             let liveAPs = 0;
             for (let i = 0; i < cliInfo.aids.length; i += 1) {
               if (liveAP[cliInfo.aids[i]]) {
@@ -134,16 +144,48 @@ export const route = (core, io, csi, db) => (new Promise((resolve) => {
                 });
               }
             }
+
+            // Bind disconnect event
             cli.on('disconnect', () => {
               for (let i = 0; i < cliInfo.aids.length; i += 1) {
                 delete liveClient[cliInfo.aids[i]][cid];
               }
             });
-            cli.emit('regResult', JSON.stringify({
+
+            // Create result object
+            const regResult = {
               name: cliInfo.name,
               areaCount: cliInfo.aids.length,
               connected: liveAPs,
-            }));
+            };
+            if (core.arg.enableDebug) {
+              const areaNameFuture = [];
+              for (let i = 0; i < cliInfo.aids.length; i += 1) {
+                areaNameFuture.push(db.queryAreaID(cliInfo.aids[i]).then((area) => ({
+                  aid: area.id,
+                  name: area.name,
+                })));
+              }
+              Promise.all(areaNameFuture).then((areas) => {
+                const configs = csi.getCSIConfig(core);
+                regResult.debugMode = true;
+                regResult.debugConfig = {
+                  slideInterval: core.arg.windowInterval,
+                  txArray: configs.csiTxAntenna.map(Number),
+                  rxArray: configs.csiRxAntenna.map(Number),
+                  labels: configs.modelLabels,
+                  targetLabelIndex: core.arg.notifID.split(',').map(Number),
+                  areas,
+                  amplitude: configs.csiProcAmp,
+                  phase: configs.csiProcPhase,
+                  pps: configs.debugPPS,
+                };
+                cli.emit('regResult', JSON.stringify(regResult));
+              });
+            } else {
+              regResult.debugMode = false;
+              cli.emit('regResult', JSON.stringify(regResult));
+            }
           })
           .catch(() => {
             lout.info(`New client tried to register but failed: ${cid}`);
@@ -156,7 +198,7 @@ export const route = (core, io, csi, db) => (new Promise((resolve) => {
     });
   });
 
-  // Register websocket api to CSI module
+  // Register alerting websocket api to CSI module
   csi.setAlerter((aid, prob) => {
     const aidLog = alertLog.indexOf(aid);
     if (aidLog === -1) {
@@ -178,4 +220,32 @@ export const route = (core, io, csi, db) => (new Promise((resolve) => {
       }
     }
   });
+
+  // Register debugging websocket api to CSI module
+  if (core.arg.enableDebug) {
+    csi.setPredictionDebugger((aid, data) => {
+      if (liveClient[aid]) {
+        const clis = Object.values(liveClient[aid]);
+        for (let i = 0; i < clis.length; i += 1) {
+          if (typeof clis[i] !== 'string') {
+            clis[i].emit('debugPred', JSON.stringify({
+              aid, data,
+            }));
+          }
+        }
+      }
+    });
+    csi.setCSIDebugger((aid, cnt, data) => {
+      if (liveClient[aid]) {
+        const clis = Object.values(liveClient[aid]);
+        for (let i = 0; i < clis.length; i += 1) {
+          if (typeof clis[i] !== 'string') {
+            clis[i].emit('debugCSI', JSON.stringify({
+              aid, cnt, data,
+            }));
+          }
+        }
+      }
+    });
+  }
 });

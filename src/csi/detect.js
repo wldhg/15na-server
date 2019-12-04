@@ -4,6 +4,7 @@
 import * as color from 'colors';
 
 let predLog;
+let predParseLog;
 let isPredLogEnabled;
 
 let labels;
@@ -42,6 +43,7 @@ const targetHistory = {};
 let predCount = 0;
 
 let alert;
+let predDebug = null;
 
 export const init = (core, conf) => {
   // Set logger
@@ -49,9 +51,13 @@ export const init = (core, conf) => {
     predLog = (data) => {
       core.log(data, 'stat');
     };
+    predParseLog = (data) => {
+      core.log.debug(data, 'pred');
+    };
     isPredLogEnabled = true;
   } else {
     predLog = function dummyLog() {};
+    predParseLog = predLog;
     isPredLogEnabled = false;
   }
 
@@ -97,10 +103,31 @@ export const fromBuffer = (buf) => {
 
     predLog(`${`[  ${labelString}  ]`.bold}     ${`Pred No. ${predCount += 1}`.grey}`);
 
+    // If client debugging is enabled, send to them first.
+    // In case of client debugging, it has more priority than other things.
+    if (predDebug) {
+      (new Promise((resolve) => {
+        const dataByArea = {};
+        for (let i = 0; i < aid.length; i += 1) {
+          if (dataByArea[aid[i]]) {
+            dataByArea[aid[i]].push(data[i]);
+          } else {
+            dataByArea[aid[i]] = [data[i]];
+          }
+        }
+        resolve(dataByArea);
+      })).then((dba) => {
+        const areas = Object.keys(dba);
+        for (let i = 0; i < areas.length; i += 1) {
+          predDebug(areas[i], dba[areas[i]]);
+        }
+      });
+    }
+
     for (let i = 0; i < data.length; i += 1) {
       const d = data[i];
 
-      // Process logging
+      // Process console logging
       if (isPredLogEnabled) {
         const analysis = [];
         let approx;
@@ -150,7 +177,12 @@ export const fromBuffer = (buf) => {
     }
   } catch (e) {
     predLog('Wrong data input! throw this.');
+    predParseLog(e);
   }
+};
+
+export const setPredictionDebugger = (fn) => {
+  predDebug = fn;
 };
 
 export const setAlerter = (fn) => {

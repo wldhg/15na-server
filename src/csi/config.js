@@ -41,5 +41,9 @@ export const parse = (launchCode, arg) => {
 
   data.leaveDat = arg.leavePackets ? 'true' : 'false';
 
+  data.debug = arg.enableDebug ? 'true' : 'false';
+  data.debugSkipRate = Math.ceil(arg.packetsPerSecond / 10);
+  data.debugPPS = Math.floor(arg.packetsPerSecond / data.debugSkipRate);
+
   return data;
 };

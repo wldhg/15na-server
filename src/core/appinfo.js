@@ -36,6 +36,7 @@ export const arg = {
         'windowLength', 'windowInterval', 'packetsPerSecond', 'txAntenna', 'rxAntenna', 'disableAmplitude', 'disablePhase', 'reduceResolution', 'leavePackets',
         'dispInterpretedConfig', 'dispPredResults', 'dispPredOutput', 'dispPrepOutput', 'modeledLabels',
         'notifProbCond', 'notifRepeatCond', 'notifID', 'notifHistorySize', 'notifMinInterval',
+        'enableDebug',
 
       ],
     },
@@ -286,5 +287,14 @@ export const arg = {
       description: 'Minimum interval between notifications in an area (in seconds) (Default: 10)',
       required: false,
     },
+
+    /* Client Debug Feature */
+    enableDebug: {
+      flags: ['-debug-cli', '--enable-debug-on-client'],
+      type: 'flag',
+      description: 'Enables debug feature of client',
+      required: false,
+    },
+
   },
 };

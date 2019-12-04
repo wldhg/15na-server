@@ -1,6 +1,6 @@
 {
   "name": "15na-server",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "Real-time CSI classifier",
   "main": "src/15na.js",
   "repository": "https://github.com/wldh-g/15na-server.git",
