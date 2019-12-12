@@ -8,6 +8,18 @@ function ret = preprocess( ...
   pps = double(pps64);
   colPerPair = double(colPerPair64);
 
+  hampel_k = floor(pps * 0.09);
+  hampel_sigma = 3;
+  sgolay_order = 3 + floor(pps / 300);
+  sgolay_framelen_amp = floor(pps * 0.09);
+  sgolay_framelen_phase = floor(pps * 0.11);
+  if (mod(sgolay_framelen_amp, 2) == 0)
+    sgolay_framelen_amp = sgolay_framelen_amp + 1;
+  end
+  if (mod(sgolay_framelen_phase, 2) == 0)
+    sgolay_framelen_phase = sgolay_framelen_phase + 1;
+  end
+
   if (redRes ~= 1)
     raw_data = read_bf_file_partial(datPath, redRes);
   else
@@ -69,15 +81,18 @@ function ret = preprocess( ...
     fprintf('>> [PREP - %s]   ~> Permuting amplitude\n', ppid);
     ocsi_amp = permute(db(abs(csi) + 1), [2 3 4 1]);
     csi_amp = zeros(ltx, lrx, 30, lpkt);
-    fprintf('>> [PREP - %s]   ~> Applying Hampel filter to amplitude\n', ppid);
+    fprintf('>> [PREP - %s]   ~> Applying filters to amplitude\n', ppid);
     for t = 1:ltx
       for r = 1:lrx
         for ch = 1:30
           csi_amp(t, r, ch, :) = ...
-            interp1(timestamp, hampel( ...
-                reshape(ocsi_amp(t, r, ch, :), [1, length(uni)]), ...
-                6, 1.6 ), ...
-              interpolated_timestamp );
+            sgolayfilt( ...
+              hampel( ...
+                interp1(timestamp, ...
+                  reshape(ocsi_amp(t, r, ch, :), [1, length(uni)]), ...
+                  interpolated_timestamp), ...
+                hampel_k, hampel_sigma), ...
+              sgolay_order, sgolay_framelen_amp);
         end
       end
     end
@@ -87,14 +102,21 @@ function ret = preprocess( ...
     ocsi_phase = permute(angle(csi), [2 3 4 1]);
     partial_phase = zeros(30, length(uni));
     csi_phase = zeros(ltx, lrx, 30, lpkt);
-    fprintf('>> [PREP - %s]   ~> Calibrating phase\n', ppid);
+    fprintf('>> [PREP - %s]   ~> Calibrating & filtering phase\n', ppid);
     for k = 1:ltx
       for m = 1:lrx
         for j = 1:length(uni)
           partial_phase(:, j) = phase_calibration(ocsi_phase(k, m, :, j));
         end
         for ch = 1:30
-          csi_phase(k, m, ch, :) = interp1(timestamp, partial_phase(ch, :), interpolated_timestamp);
+          csi_phase(k, m, ch, :) = ...
+            sgolayfilt( ...
+              hampel( ...
+                interp1(timestamp, ...
+                  partial_phase(ch, :), ...
+                  interpolated_timestamp), ...
+                hampel_k, hampel_sigma), ...
+              sgolay_order, sgolay_framelen_phase);
         end
       end
     end

@@ -18,6 +18,6 @@ function calibrated_phase2 = phase_calibration(phasedata)
     b = mean(calibrated_phase);
 
     for i = 1:30
-        calibrated_phase2(i) = calibrated_phase(i) - k * i - b;
+        calibrated_phase2(i) = (calibrated_phase(i) - k * i - b) * pi / 180;
     end
 end
