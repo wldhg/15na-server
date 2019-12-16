@@ -24,9 +24,11 @@ If fall is detected, this make alert at `15na-cli`.
 
 ```bash
 # Clone the repository
-git clone https://github.com/widh/15na-server.git
+git clone https://github.com/wldh-g/15na-server.git
 
-# Run yarn or npm
+# Run npm to install all dependencies
+cd 15na-server; npm i -D
+# Or yarn
 cd 15na-server; yarn
 
 # And look help
@@ -41,10 +43,10 @@ This project follows [Mozilla Public License 2.0](LICENSE.md#readme).
 ### Questions
 
 ###### Why MATLAB?
-I understand MATLAB is slow and not usable in most environment, because of the license problem. So, in coming version, I'll remove MATLAB code and replace it to C++ or Julia or Python-based code. The exact language is not determined yet.
+I understand MATLAB is slow and not usable in most environment, because of the license problem. So, in coming version, I'll remove MATLAB code, and change the whole project to python code.
 
 ###### How about support Atheros CSITool?
-Not planed yet.
+No plan yet.
 
 ###### Is this only for fall detection?
-No.
+Target project is fall notification project, but no. This can be used to other type of real-time HAR application, but I have no plan to change this to multi-purpose project, for now.
