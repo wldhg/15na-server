@@ -85,15 +85,12 @@ function ret = preprocess( ...
     ocsi_phase = permute(angle(csi), [2 3 4 1]);
     partial_phase = zeros(30, length(uni));
     csi_phase = zeros(ltx, lrx, 30, lpkt);
-    fprintf('>> [PREP - %s]   ~> Calibrating & filtering phase\n', ppid);
+    fprintf('>> [PREP - %s]   ~> Applying filters to phase\n', ppid);
     for k = 1:ltx
       for m = 1:lrx
-        for j = 1:length(uni)
-          partial_phase(:, j) = phase_calibration(ocsi_phase(k, m, :, j));
-        end
         for ch = 1:30
           csi_phase(k, m, ch, :) = interp1(timestamp, ...
-            partial_phase(ch, :), ...
+            ocsi_phase(k, m, ch, :), ...
             interpolated_timestamp);
         end
       end
